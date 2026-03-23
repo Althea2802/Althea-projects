@@ -164,6 +164,17 @@ header h1 em{font-style:italic;color:var(--gold);}
 .btn-yes-del{padding:0.38rem 0.9rem;background:#7a1f1f;border:none;border-radius:2px;color:#f0d0c0;font-family:'DM Sans',sans-serif;font-size:0.90rem;cursor:pointer;transition:background 0.2s;}
 .btn-yes-del:hover{background:#9a2828;}
 .btn-no-del{padding:0.38rem 0.9rem;background:transparent;border:1px solid var(--border);border-radius:2px;color:var(--text3);font-family:'DM Sans',sans-serif;font-size:0.90rem;cursor:pointer;}
+
+/* PROJECT LINK BUTTON */
+.btn-open{display:block;width:100%;margin-top:0.6rem;padding:0.6rem;background:var(--gold);border:none;border-radius:3px;font-family:'DM Sans',sans-serif;font-weight:500;font-size:0.92rem;color:var(--bg);cursor:pointer;transition:all 0.2s;text-align:center;text-decoration:none;}
+.btn-open:hover{background:var(--gold-lt);}
+.art-glow-wrap{border-radius:2px 5px 5px 2px;display:flex;}
+.art-glow-wrap-live{
+  border-radius:2px 5px 5px 2px;
+  animation:spineGlow 2s ease-in-out infinite;}
+@keyframes spineGlow{
+  0%,100%{box-shadow:0 0 0 2.5px rgba(200,149,42,0.7),0 0 10px 3px rgba(200,149,42,0.4),0 0 20px 4px rgba(200,149,42,0.15);}
+  50%{box-shadow:0 0 0 2.5px #e8b84a,0 0 22px 8px rgba(232,184,74,0.85),0 0 44px 14px rgba(200,149,42,0.45),0 0 64px 18px rgba(200,149,42,0.2);}}
 </style>
 </head>
 <body>
@@ -240,7 +251,7 @@ const DP=[
   {id:14,name:'2am brain dump',            cat:'🌙 nightowl + productivity',status:'idea',  vibe:'midnight starry',         notes:'type freely → claude finds 3 patterns + 1 action',                     icon:'🌙',color:1, updated:'2026-03-24'},
   {id:15,name:'deep sea journal',          cat:'🌙 nightowl + productivity',status:'idea',  vibe:'bioluminescent ocean',    notes:'type as sea creatures drift past, entries are bottles',                  icon:'🪸',color:2, updated:'2026-03-24'},
   {id:16,name:'pink noise room',           cat:'🌙 nightowl + productivity',status:'idea',  vibe:'ambient aesthetic rooms', notes:'sound mixer + ocean/forest/café visuals, includes tide mode',            icon:'🍶',color:4, updated:'2026-03-24'},
-  {id:17,name:"althea's nook",             cat:'🌙 nightowl + productivity',status:'live',  vibe:'dark academia library',   notes:"the creative project tracker you're in right now ✦",                    icon:'🕯️',color:0, updated:'2026-03-24'},
+  {id:17,name:"althea's nook",             cat:'🌙 nightowl + productivity',status:'live',  vibe:'dark academia library',   notes:"the creative project tracker you're in right now ✦",url:'https://althea2802.github.io/Althea-projects/altheas-nook',icon:'🕯️',color:0, updated:'2026-03-24'},
   {id:18,name:'pixel me, but strategic',   cat:'🌙 nightowl + productivity',status:'idea',  vibe:'pixel + soft 2d',         notes:'chaos in → pixel you processes → 3 priorities',                         icon:'🌿',color:3, updated:'2026-03-24'},
   {id:19,name:'career co-pilot',           cat:'💼 career + professional',  status:'idea',  vibe:'editorial clean',         notes:'stupidfish but knows you. cover letters, JD scoring, interview prep',   icon:'🧭',color:1, updated:'2026-03-24'},
   {id:20,name:'job search command center', cat:'💼 career + professional',  status:'idea',  vibe:'kanban soft',             notes:'tracker + claude follow-up writer. applied/ghosted/interviewing',       icon:'📋',color:2, updated:'2026-03-24'},
@@ -340,9 +351,11 @@ function renderAll(){
       art.onclick=()=>openView(p.id);
       art.innerHTML=`
         <div class="art-glow"></div>
-        <div class="art-body" style="background:${sc}">
-          <div class="art-dot" style="background:${sd.color}"></div>
-          <div class="art-icon">${p.icon||'📦'}</div>
+        <div class="${p.url?'art-glow-wrap art-glow-wrap-live':'art-glow-wrap'}">
+          <div class="art-body" style="background:${sc}">
+            <div class="art-dot" style="background:${sd.color}"></div>
+            <div class="art-icon">${p.icon||'📦'}</div>
+          </div>
         </div>
         <div class="art-shadow"></div>
         <div class="art-label">${p.name}</div>`;
@@ -363,6 +376,8 @@ function openView(id){
     <div class="detail-row"><div class="d-label">vibe</div><div class="d-val">${p.vibe||'—'}</div></div>
     <div class="detail-row"><div class="d-label">notes</div><div class="d-val">${p.notes||'—'}</div></div>
     <div class="detail-row"><div class="d-label">updated</div><div class="d-val">${p.updated||'—'}</div></div>
+    <div class="detail-row"><div class="d-label">url</div><div class="d-val">${p.url?`<a href="${p.url}" target="_blank" style="color:var(--gold);text-decoration:none;">${p.url}</a>`:'—'}</div></div>
+    ${p.url?`<a class="btn-open" href="${p.url}" target="_blank">✦ open project</a>`:''}
     <button class="edit-link" onclick="openEdit(${id})">✏ edit this entry</button>`;
   openOverlay();
 }
@@ -398,6 +413,8 @@ function renderForm(p){
       <input class="f-input" id="f-vibe" value="${p?p.vibe||'':''}" placeholder="cottagecore, ocean teal, dark academia..."></div>
     <div class="f-field"><label class="f-label">notes</label>
       <textarea class="f-textarea" id="f-notes" rows="3" placeholder="brain dump it all...">${p?p.notes||'':''}</textarea></div>
+    <div class="f-field"><label class="f-label">project url (optional)</label>
+      <input class="f-input" id="f-url" value="${p?p.url||'':''}" placeholder="https://althea2802.github.io/Althea-projects/..."></div>
     <input type="hidden" id="f-color" value="${ci}">
     <div class="m-actions">
       <button class="btn-primary" onclick="saveProject()">save to shelf ✦</button>
@@ -437,9 +454,9 @@ function saveProject(){
   const ci=parseInt(document.getElementById('f-color').value)||0;
   if(editId){
     const p=projects.find(x=>x.id===editId);
-    if(p){p.name=name;p.cat=document.getElementById('f-cat').value;p.status=selStatus;p.icon=selIcon;p.vibe=(document.getElementById('f-vibe').value||'').trim();p.notes=(document.getElementById('f-notes').value||'').trim();p.color=ci;p.updated=now;}
+    if(p){p.name=name;p.cat=document.getElementById('f-cat').value;p.status=selStatus;p.icon=selIcon;p.vibe=(document.getElementById('f-vibe').value||'').trim();p.notes=(document.getElementById('f-notes').value||'').trim();p.url=(document.getElementById('f-url').value||'').trim();p.color=ci;p.updated=now;}
   } else {
-    projects.push({id:nextId++,name,cat:document.getElementById('f-cat').value,status:selStatus,icon:selIcon,vibe:(document.getElementById('f-vibe').value||'').trim(),notes:(document.getElementById('f-notes').value||'').trim(),color:ci,updated:now});
+    projects.push({id:nextId++,name,cat:document.getElementById('f-cat').value,status:selStatus,icon:selIcon,vibe:(document.getElementById('f-vibe').value||'').trim(),notes:(document.getElementById('f-notes').value||'').trim(),url:(document.getElementById('f-url').value||'').trim(),color:ci,updated:now});
   }
   save();closeModal();renderAll();
 }
