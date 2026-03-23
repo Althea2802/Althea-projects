@@ -1,0 +1,526 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Althea's Nook</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;1,400&family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:#0e0a07; --bg2:#150f0a; --panel:#1c140e; --panel2:#241a12;
+  --wood1:#3d2410; --wood2:#4e2e14; --wood3:#6b3e1c; --wood4:#8b5228; --wood5:#b07040;
+  --gold:#c8952a; --gold-lt:#e8b84a; --gold-dim:#7a5518;
+  --candle:#f0a830; --candle-lt:#ffd080;
+  --text1:#f0e8d8; --text2:#c4b090; --text3:#8a7060;
+  --border:rgba(200,149,42,0.18); --border2:rgba(200,149,42,0.35);
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text1);min-height:100vh;overflow-x:hidden;}
+
+.atmo{position:fixed;inset:0;z-index:0;pointer-events:none;
+  background:
+    radial-gradient(ellipse 60% 40% at 50% 0%,rgba(200,149,42,0.07) 0%,transparent 70%),
+    radial-gradient(ellipse 40% 60% at 15% 50%,rgba(180,90,20,0.06) 0%,transparent 60%),
+    radial-gradient(ellipse 40% 60% at 85% 50%,rgba(180,90,20,0.06) 0%,transparent 60%),
+    radial-gradient(ellipse 80% 30% at 50% 100%,rgba(100,50,10,0.15) 0%,transparent 70%);}
+
+.dust{position:fixed;inset:0;z-index:0;pointer-events:none;overflow:hidden;}
+.dust-p{position:absolute;width:2px;height:2px;border-radius:50%;background:rgba(240,168,48,0.35);animation:floatDust linear infinite;}
+@keyframes floatDust{0%{transform:translateY(100vh) translateX(0);opacity:0;}10%{opacity:1;}90%{opacity:0.5;}100%{transform:translateY(-20px) translateX(30px);opacity:0;}}
+
+.wrap{position:relative;z-index:1;max-width:1280px;margin:0 auto;padding:0 2rem 5rem;}
+
+/* HEADER */
+header{text-align:center;padding:3.5rem 0 2.5rem;position:relative;}
+.header-arch{position:absolute;top:0;left:50%;transform:translateX(-50%);width:280px;height:110px;border:1px solid var(--border);border-bottom:none;border-radius:140px 140px 0 0;pointer-events:none;opacity:0.35;}
+.header-arch::before{content:'';position:absolute;inset:8px;bottom:0;border:1px solid var(--border);border-bottom:none;border-radius:130px 130px 0 0;}
+.eyebrow{font-family:'Cormorant Garamond',serif;font-size:0.80rem;letter-spacing:0.3em;text-transform:uppercase;color:var(--gold-dim);margin-bottom:0.8rem;}
+header h1{font-family:'Playfair Display',serif;font-size:clamp(2.6rem,5vw,3.8rem);font-weight:400;color:var(--text1);line-height:1;letter-spacing:-0.02em;}
+header h1 em{font-style:italic;color:var(--gold);}
+.header-rule{display:flex;align-items:center;gap:1rem;justify-content:center;margin:1rem 0 0.5rem;}
+.header-rule::before,.header-rule::after{content:'';width:80px;height:1px;}
+.header-rule::before{background:linear-gradient(to right,transparent,var(--gold-dim));}
+.header-rule::after{background:linear-gradient(to left,transparent,var(--gold-dim));}
+.header-rule-dot{font-size:0.79rem;color:var(--gold-dim);}
+.header-sub{font-family:'Cormorant Garamond',serif;font-style:italic;color:var(--text3);font-size:1.12rem;}
+
+/* CONTROLS */
+.controls{display:flex;gap:0.8rem;align-items:center;margin:2rem 0 0.8rem;flex-wrap:wrap;}
+.search-wrap{position:relative;flex:1;min-width:200px;}
+.search-wrap input{width:100%;padding:0.6rem 1rem 0.6rem 2.2rem;background:var(--panel);border:1px solid var(--border);border-radius:3px;font-family:'DM Sans',sans-serif;font-size:0.94rem;color:var(--text1);outline:none;transition:border-color 0.2s;}
+.search-wrap input::placeholder{color:var(--text3);}
+.search-wrap input:focus{border-color:var(--border2);}
+.s-icon{position:absolute;left:0.7rem;top:50%;transform:translateY(-50%);font-size:0.92rem;color:var(--text3);pointer-events:none;}
+.filter-pills{display:flex;gap:0.3rem;flex-wrap:wrap;}
+.pill{padding:0.28rem 0.75rem;border-radius:2px;font-size:0.84rem;font-weight:500;letter-spacing:0.02em;border:1px solid var(--border);background:var(--panel);color:var(--text3);cursor:pointer;transition:all 0.2s;white-space:nowrap;}
+.pill:hover{border-color:var(--border2);color:var(--text2);}
+.pill.active{background:var(--gold);border-color:var(--gold);color:var(--bg);}
+.add-btn{padding:0.52rem 1.1rem;border-radius:3px;border:1px solid var(--gold-dim);background:transparent;color:var(--gold);font-family:'DM Sans',sans-serif;font-size:0.94rem;font-weight:500;cursor:pointer;transition:all 0.2s;white-space:nowrap;}
+.add-btn:hover{background:var(--gold);color:var(--bg);}
+
+/* STATS */
+.stats-bar{display:flex;gap:0.5rem;margin:0.4rem 0 2.5rem;flex-wrap:wrap;}
+.stat-chip{padding:0.18rem 0.65rem;border-radius:2px;font-size:0.94rem;background:var(--panel);border:1px solid var(--border);color:var(--text3);}
+.stat-chip b{color:var(--text2);font-weight:500;}
+
+/* SHELF SECTION */
+.shelf-section{margin-bottom:3.5rem;}
+.cat-label{font-family:'Cormorant Garamond',serif;font-size:0.84rem;letter-spacing:0.25em;text-transform:uppercase;color:var(--gold-dim);margin-bottom:1rem;display:flex;align-items:center;gap:0.8rem;}
+.cat-label::after{content:'';flex:1;height:1px;background:linear-gradient(to right,var(--border2),transparent);}
+
+/* 3D SHELF */
+.shelf{position:relative;padding:1.2rem 1.4rem 0;
+  background:repeating-linear-gradient(90deg,transparent 0,transparent 38px,rgba(0,0,0,0.07) 38px,rgba(0,0,0,0.07) 40px),
+    linear-gradient(to bottom,#1a0f08 0%,#130c06 60%,#0e0804 100%);
+  border-bottom:14px solid var(--wood3);
+  border-radius:2px 2px 0 0;
+  box-shadow:inset 2px 0 8px rgba(0,0,0,0.6),inset -2px 0 8px rgba(0,0,0,0.6),inset 0 6px 20px rgba(0,0,0,0.5),0 14px 0 var(--wood2),0 16px 0 var(--wood1),0 18px 28px rgba(0,0,0,0.7);}
+.shelf::after{content:'';position:absolute;bottom:-14px;left:0;right:0;height:14px;
+  background:repeating-linear-gradient(90deg,transparent 0,transparent 20px,rgba(0,0,0,0.12) 20px,rgba(0,0,0,0.12) 21px),
+    linear-gradient(to bottom,rgba(255,200,100,0.12) 0%,transparent 30%,rgba(0,0,0,0.2) 100%);}
+.shelf::before{content:'';position:absolute;inset:0;
+  background:linear-gradient(to right,rgba(0,0,0,0.4) 0%,transparent 40px),
+    linear-gradient(to left,rgba(0,0,0,0.4) 0%,transparent 40px),
+    linear-gradient(to bottom,rgba(255,180,80,0.04) 0%,transparent 30%);
+  pointer-events:none;border-radius:2px 2px 0 0;z-index:1;}
+.shelf-items{display:flex;gap:0.55rem;overflow-x:auto;padding-bottom:1.4rem;scrollbar-width:thin;scrollbar-color:var(--wood3) transparent;min-height:150px;align-items:flex-end;position:relative;z-index:2;}
+.shelf-items::-webkit-scrollbar{height:3px;}
+.shelf-items::-webkit-scrollbar-thumb{background:var(--wood3);border-radius:2px;}
+.shelf-empty{display:flex;align-items:center;justify-content:center;width:100%;font-family:'Cormorant Garamond',serif;font-style:italic;color:rgba(140,100,60,0.3);font-size:0.97rem;padding-bottom:1rem;}
+
+/* ARTIFACT — 3D BOOK SPINE */
+.artifact{display:flex;flex-direction:column;align-items:center;cursor:pointer;transition:transform 0.25s cubic-bezier(0.34,1.56,0.64,1);flex-shrink:0;width:68px;position:relative;}
+.artifact:hover{transform:translateY(-10px);}
+.artifact:hover .art-glow{opacity:1;}
+.artifact:hover .art-shadow{opacity:0.6;transform:scaleX(0.85);}
+.artifact:hover .art-label{color:var(--text2);}
+
+.art-glow{position:absolute;bottom:14px;width:48px;height:18px;background:radial-gradient(ellipse,rgba(240,168,48,0.4),transparent 70%);opacity:0;transition:opacity 0.3s;pointer-events:none;z-index:0;}
+.art-shadow{position:absolute;bottom:-3px;width:52px;height:7px;background:radial-gradient(ellipse,rgba(0,0,0,0.7),transparent 70%);opacity:0.35;transition:all 0.3s;pointer-events:none;}
+
+.art-body{width:54px;height:84px;border-radius:2px 5px 5px 2px;position:relative;z-index:1;display:flex;align-items:center;justify-content:center;
+  box-shadow:inset 3px 0 6px rgba(0,0,0,0.55),inset -1px 0 2px rgba(255,255,255,0.06),3px 4px 14px rgba(0,0,0,0.65),-1px 0 0 rgba(0,0,0,0.4);
+  border-right:4px solid rgba(240,220,180,0.1);overflow:hidden;}
+.art-body::before{content:'';position:absolute;inset:0;
+  background:linear-gradient(to right,rgba(0,0,0,0.4) 0%,rgba(255,255,255,0.05) 18%,transparent 50%,rgba(0,0,0,0.15) 100%);
+  border-radius:inherit;z-index:2;pointer-events:none;}
+.art-body::after{content:'';position:absolute;top:0;left:0;right:0;height:3px;
+  background:linear-gradient(to right,transparent,rgba(255,220,140,0.25) 30%,rgba(255,220,140,0.45) 50%,rgba(255,220,140,0.25) 70%,transparent);z-index:3;}
+.art-icon{font-size:1.82rem;line-height:1;position:relative;z-index:4;filter:drop-shadow(0 2px 4px rgba(0,0,0,0.6));}
+.art-dot{position:absolute;top:5px;right:5px;width:7px;height:7px;border-radius:50%;border:1.5px solid rgba(0,0,0,0.5);z-index:5;}
+.art-label{font-size:0.69rem;font-weight:500;text-align:center;color:var(--text3);line-height:1.3;margin-top:0.35rem;max-width:66px;transition:color 0.2s;}
+
+/* MODAL */
+.modal-overlay{position:fixed;inset:0;z-index:200;background:rgba(8,5,3,0.78);backdrop-filter:blur(6px);display:flex;align-items:center;justify-content:center;padding:1rem;opacity:0;pointer-events:none;transition:opacity 0.25s;}
+.modal-overlay.open{opacity:1;pointer-events:all;}
+.modal{background:var(--panel2);border:1px solid var(--border2);border-radius:5px;padding:2rem;width:100%;max-width:500px;max-height:88vh;overflow-y:auto;box-shadow:0 0 0 1px var(--border),0 30px 80px rgba(0,0,0,0.85),inset 0 1px 0 rgba(200,149,42,0.12);transform:scale(0.96) translateY(8px);transition:transform 0.25s;position:relative;}
+.modal-overlay.open .modal{transform:scale(1) translateY(0);}
+.modal-arch-top{position:absolute;top:-1px;left:50%;transform:translateX(-50%);width:100px;height:16px;border-top:1px solid var(--border2);border-left:1px solid var(--border2);border-right:1px solid var(--border2);border-radius:50px 50px 0 0;opacity:0.45;}
+.m-close{position:absolute;top:1rem;right:1rem;background:var(--panel);border:1px solid var(--border);border-radius:3px;width:28px;height:28px;font-size:0.84rem;cursor:pointer;color:var(--text3);display:flex;align-items:center;justify-content:center;transition:all 0.2s;}
+.m-close:hover{border-color:var(--border2);color:var(--text1);}
+.m-icon-big{text-align:center;font-size:3.12rem;margin-bottom:0.8rem;filter:drop-shadow(0 4px 12px rgba(200,149,42,0.25));}
+.m-title{font-family:'Playfair Display',serif;font-size:1.47rem;font-weight:400;text-align:center;color:var(--text1);margin-bottom:0.2rem;}
+.m-cat{text-align:center;font-family:'Cormorant Garamond',serif;font-style:italic;font-size:0.94rem;color:var(--text3);margin-bottom:1.4rem;}
+.m-divider{height:1px;background:linear-gradient(to right,transparent,var(--border2),transparent);margin:0.8rem 0;}
+.detail-row{display:flex;align-items:flex-start;gap:1rem;padding:0.45rem 0;}
+.d-label{font-size:0.79rem;font-weight:500;letter-spacing:0.08em;text-transform:uppercase;color:var(--text3);min-width:70px;padding-top:2px;}
+.d-val{font-family:'Cormorant Garamond',serif;font-size:1.07rem;color:var(--text2);flex:1;line-height:1.5;}
+.status-badge{display:inline-block;padding:0.15rem 0.6rem;border-radius:2px;font-size:0.94rem;font-weight:500;color:white;}
+.edit-link{display:block;width:100%;margin-top:1rem;padding:0.55rem;background:transparent;border:1px solid var(--border);border-radius:3px;font-family:'DM Sans',sans-serif;font-size:0.92rem;color:var(--text3);cursor:pointer;transition:all 0.2s;text-align:center;}
+.edit-link:hover{border-color:var(--border2);color:var(--gold);}
+
+/* FORM */
+.f-field{margin-bottom:0.9rem;}
+.f-label{display:block;font-size:0.79rem;letter-spacing:0.08em;text-transform:uppercase;color:var(--text3);margin-bottom:0.4rem;}
+.f-input,.f-textarea,.f-select{width:100%;padding:0.52rem 0.82rem;background:var(--panel);border:1px solid var(--border);border-radius:3px;font-family:'Cormorant Garamond',serif;font-size:1.07rem;color:var(--text1);outline:none;transition:border-color 0.2s;resize:none;}
+.f-input::placeholder,.f-textarea::placeholder{color:var(--text3);}
+.f-input:focus,.f-textarea:focus,.f-select:focus{border-color:var(--border2);}
+.f-select option{background:var(--panel2);}
+.status-grp{display:flex;flex-wrap:wrap;gap:0.3rem;}
+.s-btn{padding:0.26rem 0.68rem;border-radius:2px;font-size:0.94rem;border:1px solid var(--border);background:var(--panel);color:var(--text3);cursor:pointer;transition:all 0.15s;}
+.s-btn:hover{border-color:var(--border2);color:var(--text2);}
+.s-btn.on{color:#0e0a07;border-color:transparent;}
+
+/* ICON PICKER */
+.icon-grid{display:flex;flex-wrap:wrap;gap:0.3rem;max-height:120px;overflow-y:auto;padding:0.45rem;background:var(--panel);border:1px solid var(--border);border-radius:3px;scrollbar-width:thin;scrollbar-color:var(--wood3) transparent;}
+.icon-opt{width:34px;height:34px;display:flex;align-items:center;justify-content:center;font-size:1.37rem;border-radius:3px;border:1px solid transparent;cursor:pointer;transition:all 0.15s;background:var(--panel2);}
+.icon-opt:hover{border-color:var(--border2);}
+.icon-opt.on{border-color:var(--gold);background:var(--wood1);}
+
+/* ACTIONS */
+.m-actions{display:flex;gap:0.6rem;margin-top:1.4rem;}
+.btn-primary{flex:1;padding:0.62rem;background:var(--gold);border:none;border-radius:3px;font-family:'DM Sans',sans-serif;font-weight:500;font-size:0.97rem;color:var(--bg);cursor:pointer;transition:all 0.2s;}
+.btn-primary:hover{background:var(--gold-lt);}
+.btn-ghost{padding:0.62rem 1rem;background:transparent;border:1px solid var(--border);border-radius:3px;font-family:'DM Sans',sans-serif;font-size:0.92rem;color:var(--text3);cursor:pointer;transition:all 0.2s;}
+.btn-ghost:hover{border-color:var(--border2);color:var(--text2);}
+.btn-danger{padding:0.62rem 1rem;background:transparent;border:1px solid rgba(160,50,40,0.4);border-radius:3px;font-family:'DM Sans',sans-serif;font-size:0.92rem;color:#906050;cursor:pointer;transition:all 0.2s;}
+.btn-danger:hover{border-color:#c04030;color:#e05040;}
+
+/* DELETE CONFIRM — inline, no browser dialog */
+.del-confirm{background:var(--panel);border:1px solid rgba(160,50,40,0.35);border-radius:3px;padding:0.8rem 1rem;margin-top:0.8rem;display:none;}
+.del-confirm.show{display:block;}
+.del-confirm p{font-family:'Cormorant Garamond',serif;font-style:italic;font-size:1.02rem;color:var(--text2);margin-bottom:0.6rem;}
+.del-btns{display:flex;gap:0.5rem;}
+.btn-yes-del{padding:0.38rem 0.9rem;background:#7a1f1f;border:none;border-radius:2px;color:#f0d0c0;font-family:'DM Sans',sans-serif;font-size:0.90rem;cursor:pointer;transition:background 0.2s;}
+.btn-yes-del:hover{background:#9a2828;}
+.btn-no-del{padding:0.38rem 0.9rem;background:transparent;border:1px solid var(--border);border-radius:2px;color:var(--text3);font-family:'DM Sans',sans-serif;font-size:0.90rem;cursor:pointer;}
+</style>
+</head>
+<body>
+<div class="atmo"></div>
+<div class="dust" id="dustLayer"></div>
+
+<div class="wrap">
+  <header>
+    <div class="header-arch"></div>
+    <div class="eyebrow">✦ &nbsp; a curator's archive &nbsp; ✦</div>
+    <h1>Althea's <em>Nook</em></h1>
+    <div class="header-rule"><div class="header-rule-dot">◆</div></div>
+    <p class="header-sub">every idea deserves a shelf</p>
+  </header>
+
+  <div class="controls">
+    <div class="search-wrap">
+      <span class="s-icon">⌕</span>
+      <input type="text" id="searchInput" placeholder="search the archive..." oninput="renderAll()">
+    </div>
+    <div class="filter-pills">
+      <button class="pill active" onclick="setFilter(this,'all')">all</button>
+      <button class="pill" onclick="setFilter(this,'idea')">idea</button>
+      <button class="pill" onclick="setFilter(this,'building')">building</button>
+      <button class="pill" onclick="setFilter(this,'inprogress')">in progress</button>
+      <button class="pill" onclick="setFilter(this,'next')">up next</button>
+      <button class="pill" onclick="setFilter(this,'paused')">paused</button>
+      <button class="pill" onclick="setFilter(this,'live')">live ✦</button>
+      <button class="pill" onclick="setFilter(this,'abandoned')">abandoned</button>
+    </div>
+    <button class="add-btn" onclick="openAdd()">+ add to archive</button>
+  </div>
+
+  <div class="stats-bar" id="statsBar"></div>
+  <div id="shelves"></div>
+</div>
+
+<div class="modal-overlay" id="overlay" onclick="overlayClick(event)">
+  <div class="modal" id="modalBox">
+    <div class="modal-arch-top"></div>
+    <button class="m-close" onclick="closeModal()">✕</button>
+    <div id="modalBody"></div>
+  </div>
+</div>
+
+<script>
+const STATUSES={
+  idea:      {label:'idea',       color:'#8a6aaa'},
+  building:  {label:'building',   color:'#5a9a96'},
+  inprogress:{label:'in progress',color:'#c8952a'},
+  paused:    {label:'paused',     color:'#6b4c3b'},
+  next:      {label:'up next',    color:'#6a9460'},
+  live:      {label:'live ✦',    color:'#c4687a'},
+  abandoned: {label:'abandoned',  color:'#607080'},
+};
+const CATS=['🌸 cozy personal','🌙 nightowl + productivity','💼 career + professional','🧠 learning + knowledge','🎮 gaming tools','🌊 ocean + nature + magic','🎵 music + creative','✨ other'];
+const ALL_ICONS=['📬','📖','🍶','🌿','🪄','🔮','🐚','✨','🎀','🕯️','🌙','🌸','🍃','🌷','🧿','🫧','🪬','🌺','🦋','🧚','🌊','🐠','🐋','🦀','💎','🔭','🗓️','⏳','🌛','🪸','🏡','🗃️','🌟','⭐','🎪','🧭','📋','✍️','🧪','🔬','📣','🎮','🃏','🧝','💬','📚','🎬','🫧','🕳️','🧩','🌌','🎹','🎶','🎵','🎸','🥁','🏺','🎠','🧸','🎁','🗺️','🏰','🕰️','⚗️','🔑','🗝️','📜','🖋️','🪶','📿','🫙','🧋','🌻','🌹','🍄','🦔','🐇','🦊','🦝','🐈','🦉','🐝','💫','🌠'];
+const SPINE_COLORS=['#5a3520','#3d2858','#1e3d2f','#3a2818','#2a3d50','#4a2030','#1e3a3a','#3d3020','#2a1e40','#1a3528','#4a3010','#302050','#1a3020','#3a2810','#203848'];
+
+const DP=[
+  {id:1, name:'digital mailbox',           cat:'🌸 cozy personal',          status:'idea',  vibe:'cottagecore + sparkles',  notes:'write to future self, lever with sparkle animation',                     icon:'📬',color:0, updated:'2026-03-24'},
+  {id:2, name:'journal + dream decoder',   cat:'🌸 cozy personal',          status:'idea',  vibe:'soft pink, candlelit',    notes:'page-flip journal + dream tab with psych pattern reading',               icon:'📖',color:1, updated:'2026-03-24'},
+  {id:3, name:'message in a bottle',       cat:'🌸 cozy personal',          status:'idea',  vibe:'ocean + parchment',       notes:'write it, seal it, washes up on a set date',                             icon:'🐚',color:2, updated:'2026-03-24'},
+  {id:4, name:'spell cast lab',            cat:'🌸 cozy personal',          status:'idea',  vibe:'fairycore, animated',     notes:'intention in → ritual out. cottagecore loading screen',                  icon:'🪄',color:3, updated:'2026-03-24'},
+  {id:5, name:'manifestation dashboard',   cat:'🌸 cozy personal',          status:'idea',  vibe:'moon + soft aurora',      notes:'moon phase, affirmation, era tracker merged',                            icon:'🔮',color:4, updated:'2026-03-24'},
+  {id:6, name:'soft tarot pull',           cat:'🌸 cozy personal',          status:'idea',  vibe:'fairycore illustrated',   notes:'daily card, psychological reading from claude',                          icon:'🌟',color:0, updated:'2026-03-24'},
+  {id:7, name:'mermaid oracle',            cat:'🌸 cozy personal',          status:'idea',  vibe:'aqua + pearl',            notes:'pull a shell, get an ocean-coded reading',                               icon:'🌊',color:2, updated:'2026-03-24'},
+  {id:8, name:'vibe generator',            cat:'🌸 cozy personal',          status:'idea',  vibe:'rainbow soft',            notes:'mood → song + colour + word + quote + thing to do',                     icon:'✨',color:1, updated:'2026-03-24'},
+  {id:9, name:'receipt printer',           cat:'🌸 cozy personal',          status:'idea',  vibe:'vintage thermal',         notes:'thermal-style cute predictions on demand',                               icon:'🎀',color:3, updated:'2026-03-24'},
+  {id:10,name:'pixel cottage desktop',     cat:'🌙 nightowl + productivity',status:'idea',  vibe:'cozy cottage interior',  notes:'animated room dashboard, tiny character moves',                          icon:'🏡',color:4, updated:'2026-03-24'},
+  {id:11,name:'stardew day planner',       cat:'🌙 nightowl + productivity',status:'idea',  vibe:'stardew + disney',        notes:'plan your day like a stardew day, pixel you walks through tasks',        icon:'🗓️',color:0, updated:'2026-03-24'},
+  {id:12,name:'energy oracle',             cat:'🌙 nightowl + productivity',status:'idea',  vibe:'sunrise soft',            notes:'30 sec morning check-in → claude shapes your day',                      icon:'🌛',color:2, updated:'2026-03-24'},
+  {id:13,name:'hyperfocus timer',          cat:'🌙 nightowl + productivity',status:'idea',  vibe:'cozy animated scene',     notes:'pomodoro but no guilt, scene progresses as you work',                   icon:'⏳',color:3, updated:'2026-03-24'},
+  {id:14,name:'2am brain dump',            cat:'🌙 nightowl + productivity',status:'idea',  vibe:'midnight starry',         notes:'type freely → claude finds 3 patterns + 1 action',                     icon:'🌙',color:1, updated:'2026-03-24'},
+  {id:15,name:'deep sea journal',          cat:'🌙 nightowl + productivity',status:'idea',  vibe:'bioluminescent ocean',    notes:'type as sea creatures drift past, entries are bottles',                  icon:'🪸',color:2, updated:'2026-03-24'},
+  {id:16,name:'pink noise room',           cat:'🌙 nightowl + productivity',status:'idea',  vibe:'ambient aesthetic rooms', notes:'sound mixer + ocean/forest/café visuals, includes tide mode',            icon:'🍶',color:4, updated:'2026-03-24'},
+  {id:17,name:"althea's nook",             cat:'🌙 nightowl + productivity',status:'live',  vibe:'dark academia library',   notes:"the creative project tracker you're in right now ✦",                    icon:'🕯️',color:0, updated:'2026-03-24'},
+  {id:18,name:'pixel me, but strategic',   cat:'🌙 nightowl + productivity',status:'idea',  vibe:'pixel + soft 2d',         notes:'chaos in → pixel you processes → 3 priorities',                         icon:'🌿',color:3, updated:'2026-03-24'},
+  {id:19,name:'career co-pilot',           cat:'💼 career + professional',  status:'idea',  vibe:'editorial clean',         notes:'stupidfish but knows you. cover letters, JD scoring, interview prep',   icon:'🧭',color:1, updated:'2026-03-24'},
+  {id:20,name:'job search command center', cat:'💼 career + professional',  status:'idea',  vibe:'kanban soft',             notes:'tracker + claude follow-up writer. applied/ghosted/interviewing',       icon:'📋',color:2, updated:'2026-03-24'},
+  {id:21,name:'linkedin post machine',     cat:'💼 career + professional',  status:'idea',  vibe:'editorial clean',         notes:'your voice baked in. topic → 3 posts in your exact tone',              icon:'✍️',color:4, updated:'2026-03-24'},
+  {id:22,name:'brand strategy lab',        cat:'💼 career + professional',  status:'idea',  vibe:'strategic + deep',        notes:'paste a campaign → full teardown: archetype, psychology, pillars',      icon:'🔬',color:0, updated:'2026-03-24'},
+  {id:23,name:'applied persuasion lab',    cat:'💼 career + professional',  status:'idea',  vibe:'deep analytical',         notes:'brief → relevant psych principles → applied to YOUR output',            icon:'🧪',color:3, updated:'2026-03-24'},
+  {id:24,name:'marketing monk',            cat:'💼 career + professional',  status:'idea',  vibe:'monk + strategy',         notes:'real global strategies, searchable by industry + goal',                 icon:'📣',color:1, updated:'2026-03-24'},
+  {id:25,name:'trend decoder',             cat:'💼 career + professional',  status:'idea',  vibe:'sharp editorial',         notes:'paste any brand moment → why it worked + what to steal',                icon:'🔭',color:2, updated:'2026-03-24'},
+  {id:26,name:'pixel workflow theater',    cat:'💼 career + professional',  status:'idea',  vibe:'pixel office cozy',       notes:'watch tiny pixel agents do your work live',                              icon:'🎪',color:4, updated:'2026-03-24'},
+  {id:27,name:'reading nook + curator',    cat:'🧠 learning + knowledge',   status:'idea',  vibe:'candlelit library',       notes:'any article → cozy reading UI + reading list by impact/effort',         icon:'📚',color:0, updated:'2026-03-24'},
+  {id:28,name:'youtube + book summarizer', cat:'🧠 learning + knowledge',   status:'idea',  vibe:'clean minimal',           notes:'link or title → full summary, highlights, action',                      icon:'🎬',color:3, updated:'2026-03-24'},
+  {id:29,name:'nibble daily',              cat:'🧠 learning + knowledge',   status:'idea',  vibe:'duolingo but cozy',       notes:'bite-sized daily learning on your topics, claude-powered',              icon:'🫧',color:1, updated:'2026-03-24'},
+  {id:30,name:'rabbit hole machine',       cat:'🧠 learning + knowledge',   status:'idea',  vibe:'visual web glowing',      notes:'input topic → visual web of ideas, click any node to go deeper',        icon:'🕳️',color:2, updated:'2026-03-24'},
+  {id:31,name:'concept translator',        cat:'🧠 learning + knowledge',   status:'idea',  vibe:'clean editorial',         notes:'dense → 1 sentence + 3 ideas + 1 example + 1 action',                  icon:'🧩',color:4, updated:'2026-03-24'},
+  {id:32,name:'interest galaxy',           cat:'🧠 learning + knowledge',   status:'idea',  vibe:'starry constellation',    notes:'your interests as stars, click to explore adjacent rabbit holes',       icon:'🌌',color:0, updated:'2026-03-24'},
+  {id:33,name:'my constellation',          cat:'🧠 learning + knowledge',   status:'idea',  vibe:'personal night sky',      notes:'personal version of interest galaxy, your actual obsessions mapped',    icon:'⭐',color:3, updated:'2026-03-24'},
+  {id:34,name:'cozy game rec engine',      cat:'🎮 gaming tools',           status:'idea',  vibe:'stardew soft',            notes:'gaming profile baked in. mood → recs with vibe % + cheat support',     icon:'🎮',color:1, updated:'2026-03-24'},
+  {id:35,name:'movie rec engine',          cat:'🎮 gaming tools',           status:'idea',  vibe:'cinema cozy',             notes:'taste profile baked in. mood → recs with platform + honest caveats',   icon:'🎬',color:2, updated:'2026-03-24'},
+  {id:36,name:'cozy game wishlist',        cat:'🎮 gaming tools',           status:'idea',  vibe:'interactive shelf',       notes:'beautiful shelf — playing, want to play, ratings, vibe notes',          icon:'🃏',color:4, updated:'2026-03-24'},
+  {id:37,name:'cozy game review card',     cat:'🎮 gaming tools',           status:'idea',  vibe:'kawaii card',             notes:'rate a game → vibe, aesthetic, romance, cheat ratings → shareable',     icon:'🧝',color:0, updated:'2026-03-24'},
+  {id:38,name:'life sim character creator',cat:'🎮 gaming tools',           status:'idea',  vibe:'sims-style card',         notes:'describe yourself → sims stat sheet as a pretty card',                  icon:'🦋',color:3, updated:'2026-03-24'},
+  {id:39,name:'npc dialogue generator',    cat:'🎮 gaming tools',           status:'idea',  vibe:'stardew/SoS style',       notes:'describe a character → 10 NPC dialogue lines in stardew style',        icon:'💬',color:1, updated:'2026-03-24'},
+  {id:40,name:'stranger things wall',      cat:'🌊 ocean + nature + magic', status:'idea',  vibe:'string lights warm',      notes:'christmas lights, every key press lights one up',                       icon:'🌟',color:2, updated:'2026-03-24'},
+  {id:41,name:'time machine',              cat:'🌊 ocean + nature + magic', status:'idea',  vibe:'vintage + magic',         notes:'describe an era → transported with sounds, fashion, news',              icon:'🕰️',color:4, updated:'2026-03-24'},
+  {id:42,name:'levitating girl animation', cat:'🌊 ocean + nature + magic', status:'idea',  vibe:'disney soft 2d',          notes:'animated disney-style cozy scene progressing as a song plays',          icon:'🧚',color:0, updated:'2026-03-24'},
+  {id:43,name:'choose your fairytale',     cat:'🌊 ocean + nature + magic', status:'idea',  vibe:'cottagecore illustrated', notes:'claude writes each adventure branch. shareable illustrated ending card',  icon:'🌺',color:3, updated:'2026-03-24'},
+  {id:44,name:'instrument + dj dashboard', cat:'🎵 music + creative',       status:'idea',  vibe:'cozy studio aesthetic',   notes:'learn piano chords, DJ mechanics, music theory — interactive cozy UI',  icon:'🎹',color:1, updated:'2026-03-24'},
+  {id:45,name:'cozy music room',           cat:'🎵 music + creative',       status:'idea',  vibe:'vinyl + cozy interior',   notes:'genre rooms, vinyl player UI, spotify link. a room per genre',          icon:'🎶',color:2, updated:'2026-03-24'},
+];
+
+let projects=JSON.parse(localStorage.getItem('altheaNookV2')||'null')||DP;
+let nextId=Math.max(...projects.map(p=>p.id),0)+1;
+let activeFilter='all';
+let editId=null,selStatus='idea',selIcon='📦';
+
+function save(){localStorage.setItem('altheaNookV2',JSON.stringify(projects));}
+
+// dust
+(function(){
+  const layer=document.getElementById('dustLayer');
+  for(let i=0;i<18;i++){
+    const d=document.createElement('div');
+    d.className='dust-p';
+    d.style.left=Math.random()*100+'%';
+    const sz=(1+Math.random()*2)+'px';
+    d.style.width=sz;d.style.height=sz;
+    d.style.opacity=0.2+Math.random()*0.35;
+    const dur=12+Math.random()*20;
+    d.style.animationDuration=dur+'s';
+    d.style.animationDelay=(-Math.random()*dur)+'s';
+    layer.appendChild(d);
+  }
+})();
+
+function setFilter(el,val){
+  activeFilter=val;
+  document.querySelectorAll('.pill').forEach(p=>p.classList.remove('active'));
+  el.classList.add('active');
+  renderAll();
+}
+
+function renderAll(){
+  const q=document.getElementById('searchInput').value.toLowerCase();
+  const filtered=projects.filter(p=>{
+    const mf=activeFilter==='all'||p.status===activeFilter;
+    const ms=!q||[p.name,p.vibe||'',p.notes||''].join(' ').toLowerCase().includes(q);
+    return mf&&ms;
+  });
+  // stats
+  const counts={};
+  Object.keys(STATUSES).forEach(s=>counts[s]=projects.filter(p=>p.status===s).length);
+  document.getElementById('statsBar').innerHTML=
+    `<div class="stat-chip">total <b>${projects.length}</b></div>`+
+    Object.entries(counts).filter(([,v])=>v>0).map(([s,v])=>
+      `<div class="stat-chip" style="border-color:${STATUSES[s].color}44">${STATUSES[s].label} <b>${v}</b></div>`
+    ).join('');
+
+  const grouped={};
+  CATS.forEach(c=>grouped[c]=[]);
+  filtered.forEach(p=>{ if(grouped[p.cat]!==undefined){grouped[p.cat].push(p);}else{grouped['✨ other'].push(p);} });
+
+  const container=document.getElementById('shelves');
+  container.innerHTML='';
+  CATS.forEach(cat=>{
+    const items=grouped[cat];
+    if(!items||!items.length)return;
+    const sec=document.createElement('div');
+    sec.className='shelf-section';
+    sec.innerHTML=`<div class="cat-label">${cat}</div><div class="shelf"><div class="shelf-items" id="si-${cat.replace(/[^\w]/g,'_')}"></div></div>`;
+    container.appendChild(sec);
+    const row=sec.querySelector('.shelf-items');
+    items.forEach(p=>{
+      const sc=SPINE_COLORS[(p.color||0)%SPINE_COLORS.length];
+      const sd=STATUSES[p.status]||STATUSES.idea;
+      const art=document.createElement('div');
+      art.className='artifact';
+      art.onclick=()=>openView(p.id);
+      art.innerHTML=`
+        <div class="art-glow"></div>
+        <div class="art-body" style="background:${sc}">
+          <div class="art-dot" style="background:${sd.color}"></div>
+          <div class="art-icon">${p.icon||'📦'}</div>
+        </div>
+        <div class="art-shadow"></div>
+        <div class="art-label">${p.name}</div>`;
+      row.appendChild(art);
+    });
+  });
+}
+
+function openView(id){
+  const p=projects.find(x=>x.id===id);if(!p)return;
+  const sd=STATUSES[p.status]||STATUSES.idea;
+  document.getElementById('modalBody').innerHTML=`
+    <div class="m-icon-big">${p.icon||'📦'}</div>
+    <div class="m-title">${p.name}</div>
+    <div class="m-cat">${p.cat}</div>
+    <div class="m-divider"></div>
+    <div class="detail-row"><div class="d-label">status</div><div class="d-val"><span class="status-badge" style="background:${sd.color}">${sd.label}</span></div></div>
+    <div class="detail-row"><div class="d-label">vibe</div><div class="d-val">${p.vibe||'—'}</div></div>
+    <div class="detail-row"><div class="d-label">notes</div><div class="d-val">${p.notes||'—'}</div></div>
+    <div class="detail-row"><div class="d-label">updated</div><div class="d-val">${p.updated||'—'}</div></div>
+    <button class="edit-link" onclick="openEdit(${id})">✏ edit this entry</button>`;
+  openOverlay();
+}
+
+function openEdit(id){
+  const p=projects.find(x=>x.id===id);if(!p)return;
+  editId=id;selStatus=p.status;selIcon=p.icon||'📦';
+  renderForm(p);openOverlay();
+}
+function openAdd(){editId=null;selStatus='idea';selIcon='📦';renderForm(null);openOverlay();}
+
+function renderForm(p){
+  const sBtns=Object.entries(STATUSES).map(([s,d])=>
+    `<button class="s-btn ${selStatus===s?'on':''}" data-s="${s}"
+      style="${selStatus===s?`background:${d.color};border-color:${d.color};color:#0e0a07`:''}"
+      onclick="pickStatus('${s}',this)">${d.label}</button>`).join('');
+  const iGrid=ALL_ICONS.map(ic=>
+    `<div class="icon-opt ${selIcon===ic?'on':''}" onclick="pickIcon('${ic}',this)">${ic}</div>`).join('');
+  const ci=p?(p.color||0):Math.floor(Math.random()*SPINE_COLORS.length);
+  document.getElementById('modalBody').innerHTML=`
+    <div class="m-title" style="text-align:center;margin-bottom:0.2rem">${p?'edit entry':'new entry'}</div>
+    <div class="m-cat">${p?p.cat:'adding to the archive ✦'}</div>
+    <div class="m-divider"></div>
+    <div class="f-field"><label class="f-label">project name</label>
+      <input class="f-input" id="f-name" value="${p?p.name:''}" placeholder="what are you building?"></div>
+    <div class="f-field"><label class="f-label">category</label>
+      <select class="f-select" id="f-cat">${CATS.map(c=>`<option value="${c}" ${p&&p.cat===c?'selected':''}>${c}</option>`).join('')}</select></div>
+    <div class="f-field"><label class="f-label">status</label>
+      <div class="status-grp" id="sGrp">${sBtns}</div></div>
+    <div class="f-field"><label class="f-label">artifact icon</label>
+      <div class="icon-grid" id="iGrid">${iGrid}</div></div>
+    <div class="f-field"><label class="f-label">aesthetic vibe</label>
+      <input class="f-input" id="f-vibe" value="${p?p.vibe||'':''}" placeholder="cottagecore, ocean teal, dark academia..."></div>
+    <div class="f-field"><label class="f-label">notes</label>
+      <textarea class="f-textarea" id="f-notes" rows="3" placeholder="brain dump it all...">${p?p.notes||'':''}</textarea></div>
+    <input type="hidden" id="f-color" value="${ci}">
+    <div class="m-actions">
+      <button class="btn-primary" onclick="saveProject()">save to shelf ✦</button>
+      <button class="btn-ghost" onclick="closeModal()">cancel</button>
+      ${p?`<button class="btn-danger" onclick="showDel(${p.id})">remove</button>`:''}
+    </div>
+    <div class="del-confirm" id="delBox">
+      <p>remove "${p?p.name:''}" from the archive? cannot be undone.</p>
+      <div class="del-btns">
+        <button class="btn-yes-del" onclick="confirmDel(${p?p.id:0})">yes, remove</button>
+        <button class="btn-no-del" onclick="hideDel()">keep it</button>
+      </div>
+    </div>`;
+}
+
+function pickStatus(s,el){
+  selStatus=s;
+  const sd=STATUSES[s];
+  document.querySelectorAll('#sGrp .s-btn').forEach(b=>{b.classList.remove('on');b.style.background='';b.style.borderColor='';b.style.color='';});
+  el.classList.add('on');el.style.background=sd.color;el.style.borderColor=sd.color;el.style.color='#0e0a07';
+}
+function pickIcon(ic,el){
+  selIcon=ic;
+  document.querySelectorAll('#iGrid .icon-opt').forEach(x=>x.classList.remove('on'));
+  el.classList.add('on');
+}
+function showDel(id){document.getElementById('delBox').classList.add('show');}
+function hideDel(){document.getElementById('delBox').classList.remove('show');}
+function confirmDel(id){
+  projects=projects.filter(p=>p.id!==id);
+  save();closeModal();renderAll();
+}
+function saveProject(){
+  const name=(document.getElementById('f-name').value||'').trim();
+  if(!name){document.getElementById('f-name').style.borderColor='#c04030';return;}
+  const now=new Date().toISOString().split('T')[0];
+  const ci=parseInt(document.getElementById('f-color').value)||0;
+  if(editId){
+    const p=projects.find(x=>x.id===editId);
+    if(p){p.name=name;p.cat=document.getElementById('f-cat').value;p.status=selStatus;p.icon=selIcon;p.vibe=(document.getElementById('f-vibe').value||'').trim();p.notes=(document.getElementById('f-notes').value||'').trim();p.color=ci;p.updated=now;}
+  } else {
+    projects.push({id:nextId++,name,cat:document.getElementById('f-cat').value,status:selStatus,icon:selIcon,vibe:(document.getElementById('f-vibe').value||'').trim(),notes:(document.getElementById('f-notes').value||'').trim(),color:ci,updated:now});
+  }
+  save();closeModal();renderAll();
+}
+function openOverlay(){document.getElementById('overlay').classList.add('open');}
+function closeModal(){document.getElementById('overlay').classList.remove('open');}
+function overlayClick(e){if(e.target.id==='overlay')closeModal();}
+
+renderAll();
+
+// ── MAGIC WAND CURSOR + SPARKLE TRAIL ──
+(function(){
+  // hide default cursor
+  const style=document.createElement('style');
+  style.textContent=`
+    *{cursor:none!important;}
+    .wand{position:fixed;pointer-events:none;z-index:9999;font-size:1.45rem;transform:translate(-4px,-22px) rotate(-30deg);transition:transform 0.05s;filter:drop-shadow(0 0 4px rgba(240,168,48,0.8));}
+    .sparkle{position:fixed;pointer-events:none;z-index:9998;border-radius:50%;animation:sparkFade 0.7s forwards;}
+    @keyframes sparkFade{0%{opacity:1;transform:scale(1) translate(0,0);}100%{opacity:0;transform:scale(0) translate(var(--dx),var(--dy));}}
+  `;
+  document.head.appendChild(style);
+
+  // wand element
+  const wand=document.createElement('div');
+  wand.className='wand';
+  wand.textContent='🪄';
+  document.body.appendChild(wand);
+
+  // sparkle colours — gold, amber, cream, soft pink, white
+  const COLS=['#ffd700','#f0a830','#fff8e0','#ffb347','#e8b84a','#fdeef0','#ffffff','#f5c6d0'];
+  const SHAPES=['★','✦','·','✧','⋆','˚'];
+
+  let mx=0,my=0;
+  document.addEventListener('mousemove',e=>{
+    mx=e.clientX; my=e.clientY;
+    wand.style.left=mx+'px';
+    wand.style.top=my+'px';
+    spawnSparkles(mx,my);
+  });
+
+  function spawnSparkles(x,y){
+    const count=3+Math.floor(Math.random()*3);
+    for(let i=0;i<count;i++){
+      const s=document.createElement('div');
+      s.className='sparkle';
+      const size=4+Math.random()*8;
+      const col=COLS[Math.floor(Math.random()*COLS.length)];
+      const dx=(Math.random()-0.5)*60;
+      const dy=-(20+Math.random()*40);
+      const delay=Math.random()*0.15;
+      const useShape=Math.random()>0.5;
+      if(useShape){
+        s.style.cssText=`
+          left:${x+(Math.random()-0.5)*16}px;
+          top:${y+(Math.random()-0.5)*16}px;
+          width:auto;height:auto;
+          background:transparent;
+          font-size:${size+6}px;
+          color:${col};
+          text-shadow:0 0 6px ${col};
+          --dx:${dx}px;--dy:${dy}px;
+          animation-delay:${delay}s;
+          line-height:1;
+        `;
+        s.textContent=SHAPES[Math.floor(Math.random()*SHAPES.length)];
+      } else {
+        s.style.cssText=`
+          left:${x+(Math.random()-0.5)*16}px;
+          top:${y+(Math.random()-0.5)*16}px;
+          width:${size}px;height:${size}px;
+          background:${col};
+          box-shadow:0 0 ${size}px ${col};
+          --dx:${dx}px;--dy:${dy}px;
+          animation-delay:${delay}s;
+        `;
+      }
+      document.body.appendChild(s);
+      setTimeout(()=>s.remove(), 850);
+    }
+  }
+})();
+
+</script>
+</body>
+</html>
