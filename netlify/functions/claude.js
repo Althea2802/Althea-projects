@@ -4,17 +4,25 @@ exports.handler = async function(event) {
   }
 
   try {
-    const response = await fetch('https://api.anthropic.com/v1/messages', {
+    const body = JSON.parse(event.body);
+    const prompt = body.prompt || '';
+    const maxTokens = body.max_tokens || 600;
+
+    const geminiBody = {
+      contents: [{ parts: [{ text: prompt }] }],
+      generationConfig: { maxOutputTokens: maxTokens, temperature: 0.9 }
+    };
+
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${process.env.GEMINI_API_KEY}`;
+
+    const response = await fetch(url, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'x-api-key': process.env.ANTHROPIC_API_KEY,
-        'anthropic-version': '2023-06-01',
-      },
-      body: event.body,
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(geminiBody),
     });
 
     const data = await response.json();
+    const text = data?.candidates?.[0]?.content?.parts?.[0]?.text || '';
 
     return {
       statusCode: 200,
@@ -22,7 +30,7 @@ exports.handler = async function(event) {
         'Access-Control-Allow-Origin': '*',
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify(data),
+      body: JSON.stringify({ text }),
     };
   } catch (err) {
     return {
