@@ -1,0 +1,906 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The Post Machine</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;1,400&family=Lora:ital,wght@0,400;0,500;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --cream:#fdf8f2;--cream2:#f8f0e6;--cream3:#f0e6d6;
+  --pink:#c4687a;--pink-lt:#e8a0aa;--pink-blush:#fdeef0;--pink-deep:#a8505f;
+  --text1:#3d2b1f;--text2:#6b4c3b;--text3:#9b7b6b;
+  --border:rgba(139,99,72,0.15);--border2:rgba(196,104,122,0.3);
+  --gold:#c8952a;--gold-lt:#e8c870;
+  --panel:#fff9f4;
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:'DM Sans',sans-serif;background:var(--cream);color:var(--text1);min-height:100vh;overflow-x:hidden;}
+
+/* COQUETTE CURSOR */
+* { cursor: none !important; }
+#coquette-cursor {
+  position: fixed;
+  pointer-events: none;
+  z-index: 99999;
+  width: 32px;
+  height: 38px;
+  transform: translate(-4px, -4px);
+}
+.sparkle-trail {
+  position: fixed;
+  pointer-events: none;
+  z-index: 99998;
+  animation: sparkFade 0.65s forwards;
+}
+@keyframes sparkFade {
+  0%{opacity:1;transform:scale(1) translate(0,0);}
+  100%{opacity:0;transform:scale(0) translate(var(--dx),var(--dy));}
+}
+
+/* BG */
+.bg-tex{position:fixed;inset:0;z-index:0;pointer-events:none;
+  background:
+    radial-gradient(ellipse 70% 50% at 30% 0%,rgba(196,104,122,0.06) 0%,transparent 60%),
+    radial-gradient(ellipse 50% 40% at 80% 80%,rgba(139,99,72,0.05) 0%,transparent 60%),
+    var(--cream);}
+
+/* LAYOUT */
+.app{position:relative;z-index:1;display:grid;grid-template-columns:290px 1fr 270px;min-height:100vh;max-width:1400px;margin:0 auto;}
+
+/* TOPBAR */
+.topbar{grid-column:1/-1;display:flex;align-items:center;justify-content:space-between;padding:1.1rem 2rem;border-bottom:1px solid var(--border);background:rgba(253,248,242,0.92);backdrop-filter:blur(8px);position:sticky;top:0;z-index:50;}
+.logo{font-family:'Playfair Display',serif;font-size:1.35rem;font-weight:400;color:var(--text1);}
+.logo em{font-style:italic;color:var(--pink);}
+.logo-sub{font-family:'Lora',serif;font-style:italic;font-size:0.75rem;color:var(--text3);margin-top:0.1rem;}
+.tab-btns{display:flex;gap:0.4rem;}
+.tab-btn{padding:0.32rem 0.85rem;border-radius:20px;font-size:0.76rem;font-weight:500;border:1px solid var(--border);background:transparent;color:var(--text3);transition:all 0.2s;}
+.tab-btn:hover{border-color:var(--border2);color:var(--pink);}
+.tab-btn.on{background:var(--pink);border-color:var(--pink);color:white;}
+
+/* COLUMN LABEL */
+.col-label{font-family:'Lora',serif;font-style:italic;font-size:0.7rem;letter-spacing:0.1em;color:var(--text3);text-transform:uppercase;margin-bottom:0.9rem;display:flex;align-items:center;gap:0.5rem;}
+.col-label::after{content:'';flex:1;height:1px;background:var(--border);}
+
+/* LEFT: SAVED TOPICS */
+.col-left{padding:1.4rem 1.1rem 2rem;border-right:1px solid var(--border);overflow-y:auto;max-height:calc(100vh - 58px);position:sticky;top:58px;}
+.topic-card{background:var(--panel);border:1px solid var(--border);border-radius:10px;padding:0.75rem 0.9rem;margin-bottom:0.5rem;position:relative;transition:all 0.2s;}
+.topic-card:hover{border-color:var(--border2);}
+.topic-card-inner{display:flex;align-items:flex-start;gap:0.5rem;}
+.topic-use-btn{flex:1;text-align:left;background:none;border:none;padding:0;}
+.topic-tag{font-size:0.62rem;font-weight:500;text-transform:uppercase;letter-spacing:0.07em;color:var(--pink);margin-bottom:0.25rem;}
+.topic-text{font-family:'Lora',serif;font-size:0.8rem;color:var(--text1);line-height:1.45;}
+.topic-del{background:none;border:none;font-size:0.75rem;color:var(--text3);opacity:0;transition:opacity 0.2s;padding:2px 4px;flex-shrink:0;margin-top:-2px;}
+.topic-card:hover .topic-del{opacity:1;}
+.topic-del:hover{color:var(--pink);}
+.add-topic-form{margin-top:0.8rem;}
+.add-topic-row{display:flex;gap:0.4rem;margin-bottom:0.4rem;}
+.add-topic-input{flex:1;padding:0.45rem 0.7rem;background:var(--panel);border:1.5px solid var(--border);border-radius:8px;font-family:'Lora',serif;font-size:0.82rem;color:var(--text1);outline:none;transition:border-color 0.2s;}
+.add-topic-input:focus{border-color:var(--border2);}
+.add-topic-input::placeholder{color:var(--text3);}
+.add-topic-tag{width:90px;padding:0.45rem 0.5rem;background:var(--panel);border:1.5px solid var(--border);border-radius:8px;font-family:'DM Sans',sans-serif;font-size:0.76rem;color:var(--text2);outline:none;}
+.add-topic-btn{padding:0.45rem 0.8rem;background:var(--pink-blush);border:1px solid var(--border2);border-radius:8px;font-size:0.76rem;color:var(--pink);font-weight:500;}
+.add-topic-btn:hover{background:var(--pink);color:white;}
+.topics-empty{font-family:'Lora',serif;font-style:italic;font-size:0.78rem;color:var(--text3);text-align:center;padding:1.2rem 0;}
+
+/* CENTRE */
+.col-centre{padding:1.6rem 1.8rem;overflow-y:auto;max-height:calc(100vh - 58px);}
+.view{display:none;}
+.view.active{display:block;}
+
+/* INPUT */
+.section-title{font-family:'Playfair Display',serif;font-size:1.08rem;font-weight:400;color:var(--text1);margin-bottom:0.25rem;}
+.section-sub{font-size:0.76rem;color:var(--text3);font-family:'Lora',serif;font-style:italic;margin-bottom:0.9rem;}
+.input-modes{display:flex;gap:0.4rem;margin-bottom:0.7rem;}
+.mode-btn{padding:0.3rem 0.9rem;border-radius:20px;font-size:0.76rem;font-weight:500;border:1px solid var(--border);background:transparent;color:var(--text3);transition:all 0.2s;}
+.mode-btn.on{background:var(--pink-blush);border-color:var(--border2);color:var(--pink);}
+.main-input{width:100%;min-height:95px;padding:0.9rem 1.1rem;background:var(--panel);border:1.5px solid var(--border);border-radius:12px;font-family:'Lora',serif;font-size:0.93rem;color:var(--text1);resize:none;outline:none;transition:border-color 0.2s;line-height:1.65;}
+.main-input:focus{border-color:var(--border2);}
+.main-input::placeholder{color:var(--text3);}
+.input-footer{display:flex;align-items:center;margin-top:0.6rem;gap:0.6rem;}
+.char-hint{font-size:0.68rem;color:var(--text3);font-family:'Lora',serif;font-style:italic;}
+.generate-btn{margin-left:auto;padding:0.55rem 1.6rem;background:var(--pink);border:none;border-radius:20px;font-family:'DM Sans',sans-serif;font-weight:500;font-size:0.86rem;color:white;transition:all 0.2s;}
+.generate-btn:hover{background:var(--pink-deep);}
+.generate-btn:disabled{opacity:0.45;}
+
+/* VOICE PICKER */
+.voice-section{margin:1.2rem 0;}
+.voice-picker-note{font-size:0.72rem;color:var(--text3);font-family:'Lora',serif;font-style:italic;margin-bottom:0.6rem;}
+.voice-pills{display:flex;gap:0.35rem;flex-wrap:wrap;}
+.vpill{padding:0.28rem 0.8rem;border-radius:20px;font-size:0.74rem;font-weight:500;border:1px solid var(--border);background:var(--panel);color:var(--text3);transition:all 0.2s;}
+.vpill.on{background:var(--pink-blush);border-color:var(--border2);color:var(--pink);}
+.vpill.locked{background:var(--pink-blush);border-color:var(--border2);color:var(--pink);opacity:0.7;}
+.vpill-count{font-size:0.68rem;color:var(--text3);font-family:'Lora',serif;font-style:italic;margin-left:auto;align-self:center;}
+
+/* PROGRESS BAR */
+.progress-wrap{margin:1rem 0;display:none;}
+.progress-label{font-family:'Lora',serif;font-style:italic;font-size:0.78rem;color:var(--text3);margin-bottom:0.4rem;display:flex;justify-content:space-between;}
+.progress-bar-bg{height:6px;background:var(--cream3);border-radius:3px;overflow:hidden;}
+.progress-bar-fill{height:100%;background:linear-gradient(to right,var(--pink-lt),var(--pink));border-radius:3px;width:0%;transition:width 0.4s ease;}
+
+/* OUTPUT */
+.output-wrap{margin-top:1.2rem;display:none;}
+.output-nav{display:flex;align-items:center;gap:0.7rem;margin-bottom:0.9rem;}
+.output-nav-label{font-family:'Lora',serif;font-style:italic;font-size:0.8rem;color:var(--text3);}
+.nav-dots{display:flex;gap:0.35rem;}
+.ndot{width:8px;height:8px;border-radius:50%;background:var(--border);border:none;padding:0;transition:all 0.2s;}
+.ndot.on{background:var(--pink);}
+.ndot.done{background:var(--pink-lt);}
+.nav-arrows{display:flex;gap:0.3rem;margin-left:auto;}
+.nav-arr{width:28px;height:28px;border-radius:50%;border:1px solid var(--border);background:var(--panel);color:var(--text2);font-size:0.78rem;display:flex;align-items:center;justify-content:center;transition:all 0.2s;}
+.nav-arr:hover{border-color:var(--border2);color:var(--pink);}
+.post-card{background:var(--panel);border:1.5px solid var(--border);border-radius:14px;padding:1.4rem;animation:cardIn 0.28s ease;}
+@keyframes cardIn{from{opacity:0;transform:translateY(5px);}to{opacity:1;transform:translateY(0);}}
+.card-voice-row{display:flex;align-items:center;gap:0.6rem;margin-bottom:0.9rem;}
+.vbadge{font-size:0.68rem;font-weight:500;text-transform:uppercase;letter-spacing:0.07em;padding:0.18rem 0.65rem;border-radius:20px;background:var(--pink-blush);color:var(--pink);border:1px solid var(--border2);}
+.vbadge.wild{background:#f0eafb;color:#7a5aa8;border-color:#c4a8e0;}
+.vdesc{font-family:'Lora',serif;font-style:italic;font-size:0.7rem;color:var(--text3);}
+.post-text{font-family:'Lora',serif;font-size:0.96rem;line-height:1.85;color:var(--text1);white-space:pre-wrap;min-height:60px;outline:none;}
+.post-text[contenteditable]:empty::before{content:attr(data-placeholder);color:var(--text3);}
+.streaming-cursor{display:inline-block;width:2px;height:1em;background:var(--pink);margin-left:2px;animation:blink 0.8s steps(1) infinite;vertical-align:text-bottom;}
+@keyframes blink{0%,100%{opacity:1;}50%{opacity:0;}}
+.card-pending{font-family:'Lora',serif;font-style:italic;font-size:0.85rem;color:var(--text3);text-align:center;padding:2rem;opacity:0.6;}
+.card-actions{display:flex;align-items:center;gap:0.7rem;margin-top:1rem;padding-top:0.9rem;border-top:1px solid var(--border);}
+.stars{display:flex;gap:0.15rem;}
+.star{font-size:1.05rem;background:none;border:none;padding:0;color:var(--border);transition:all 0.15s;}
+.star.on{color:var(--gold);}
+.star:hover{transform:scale(1.2);}
+.rating-txt{font-size:0.68rem;color:var(--text3);font-family:'Lora',serif;font-style:italic;}
+.copy-btn{margin-left:auto;padding:0.3rem 0.85rem;border-radius:20px;border:1px solid var(--border);background:transparent;font-family:'DM Sans',sans-serif;font-size:0.73rem;color:var(--text3);transition:all 0.2s;}
+.copy-btn:hover{border-color:var(--border2);color:var(--pink);}
+.copy-btn.done{color:var(--pink);border-color:var(--pink);}
+
+/* HISTORY (right) */
+.col-right{padding:1.4rem 1.1rem 2rem;border-left:1px solid var(--border);overflow-y:auto;max-height:calc(100vh - 58px);position:sticky;top:58px;}
+.hist-item{padding:0.65rem 0.85rem;background:var(--panel);border:1px solid var(--border);border-radius:8px;margin-bottom:0.45rem;transition:all 0.2s;}
+.hist-item:hover{border-color:var(--border2);}
+.hist-prompt{font-size:0.74rem;color:var(--text1);line-height:1.4;font-family:'Lora',serif;}
+.hist-meta{font-size:0.63rem;color:var(--text3);margin-top:0.25rem;}
+.hist-empty{font-family:'Lora',serif;font-style:italic;font-size:0.78rem;color:var(--text3);text-align:center;padding:1.5rem 0;}
+
+/* TONE LIBRARY VIEW */
+.tone-grid{display:grid;gap:0.6rem;margin-bottom:0.8rem;}
+.tone-card{background:var(--panel);border:1px solid var(--border);border-radius:10px;padding:0.9rem 1rem;}
+.tone-name{font-size:0.82rem;font-weight:500;color:var(--text1);margin-bottom:0.2rem;display:flex;align-items:center;gap:0.5rem;}
+.tone-builtin-tag{font-size:0.62rem;color:var(--text3);font-weight:400;}
+.tone-dna{font-size:0.72rem;color:var(--text3);font-family:'Lora',serif;font-style:italic;line-height:1.5;}
+.tone-add-btn{width:100%;padding:0.52rem;background:transparent;border:1.5px dashed var(--border);border-radius:10px;font-family:'DM Sans',sans-serif;font-size:0.76rem;color:var(--text3);transition:all 0.2s;}
+.tone-add-btn:hover{border-color:var(--border2);color:var(--pink);}
+
+/* TONE MODAL */
+.modal-overlay{position:fixed;inset:0;z-index:200;background:rgba(61,43,31,0.38);backdrop-filter:blur(4px);display:flex;align-items:center;justify-content:center;padding:1rem;opacity:0;pointer-events:none;transition:opacity 0.22s;}
+.modal-overlay.open{opacity:1;pointer-events:all;}
+.modal{background:var(--cream);border:1.5px solid var(--border);border-radius:16px;padding:1.7rem;width:100%;max-width:500px;max-height:88vh;overflow-y:auto;box-shadow:0 20px 50px rgba(61,43,31,0.18);transform:scale(0.96);transition:transform 0.22s;}
+.modal-overlay.open .modal{transform:scale(1);}
+.modal h3{font-family:'Playfair Display',serif;font-size:1.08rem;font-weight:400;margin-bottom:0.25rem;}
+.modal-sub{font-family:'Lora',serif;font-style:italic;font-size:0.76rem;color:var(--text3);margin-bottom:1.1rem;}
+.f-field{margin-bottom:0.85rem;}
+.f-label{display:block;font-size:0.68rem;font-weight:500;text-transform:uppercase;letter-spacing:0.07em;color:var(--text3);margin-bottom:0.32rem;}
+.f-input,.f-ta{width:100%;padding:0.52rem 0.82rem;background:var(--panel);border:1.5px solid var(--border);border-radius:8px;font-family:'Lora',serif;font-size:0.9rem;color:var(--text1);outline:none;transition:border-color 0.2s;resize:none;}
+.f-input:focus,.f-ta:focus{border-color:var(--border2);}
+.f-input::placeholder,.f-ta::placeholder{color:var(--text3);}
+
+/* SAMPLE BOXES */
+.sample-boxes{display:flex;flex-direction:column;gap:0.5rem;}
+.sample-box-wrap{position:relative;}
+.sample-box{width:100%;padding:0.52rem 0.82rem;background:var(--panel);border:1.5px solid var(--border);border-radius:8px;font-family:'Lora',serif;font-size:0.88rem;color:var(--text1);outline:none;transition:border-color 0.2s;resize:none;line-height:1.55;}
+.sample-box:focus{border-color:var(--border2);}
+.sample-box::placeholder{color:var(--text3);}
+.sample-hint{font-size:0.65rem;color:var(--text3);font-family:'Lora',serif;font-style:italic;margin-top:0.25rem;}
+
+/* ANALYSIS PROGRESS */
+.analysis-progress{margin:0.9rem 0;display:none;}
+.ap-label{font-family:'Lora',serif;font-style:italic;font-size:0.76rem;color:var(--text3);margin-bottom:0.35rem;display:flex;justify-content:space-between;}
+.ap-bar-bg{height:5px;background:var(--cream3);border-radius:3px;overflow:hidden;}
+.ap-fill{height:100%;background:linear-gradient(to right,var(--pink-lt),var(--pink));border-radius:3px;width:0%;transition:width 0.35s ease;}
+.analysis-result{background:var(--pink-blush);border:1px solid var(--border2);border-radius:8px;padding:0.85rem 1rem;margin:0.8rem 0;display:none;}
+.analysis-result-label{font-size:0.68rem;font-weight:500;text-transform:uppercase;letter-spacing:0.07em;color:var(--pink);margin-bottom:0.4rem;}
+.analysis-result-text{font-family:'Lora',serif;font-size:0.82rem;color:var(--text1);line-height:1.6;}
+
+.modal-actions{display:flex;gap:0.5rem;margin-top:1.1rem;flex-wrap:wrap;}
+.btn-analyse{padding:0.55rem 1.2rem;background:var(--pink-blush);border:1px solid var(--border2);border-radius:20px;font-family:'DM Sans',sans-serif;font-weight:500;font-size:0.82rem;color:var(--pink);}
+.btn-analyse:hover{background:var(--pink);color:white;}
+.btn-analyse:disabled{opacity:0.45;}
+.btn-save{padding:0.55rem 1.2rem;background:var(--pink);border:none;border-radius:20px;font-family:'DM Sans',sans-serif;font-weight:500;font-size:0.82rem;color:white;display:none;}
+.btn-save:hover{background:var(--pink-deep);}
+.btn-cancel{padding:0.55rem 1rem;background:transparent;border:1px solid var(--border);border-radius:20px;font-family:'DM Sans',sans-serif;font-size:0.8rem;color:var(--text3);}
+.btn-reject{padding:0.55rem 1rem;background:transparent;border:1px solid rgba(180,60,40,0.3);border-radius:20px;font-family:'DM Sans',sans-serif;font-size:0.8rem;color:#a04030;display:none;}
+.btn-reject:hover{border-color:#c04030;color:#c04030;}
+</style>
+</head>
+<body>
+<div class="bg-tex"></div>
+
+<!-- COQUETTE CURSOR SVG -->
+<svg id="coquette-cursor" viewBox="0 0 32 38" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- pointer arrow shape -->
+  <path d="M4 2 L4 28 L10 22 L14 32 L17 31 L13 21 L22 21 Z" fill="#fdeef0" stroke="#c4687a" stroke-width="1.8" stroke-linejoin="round"/>
+  <!-- bow on top right -->
+  <g transform="translate(17,1)">
+    <path d="M0,4 C-3,1 -6,0 -5,3 C-4,5 -1,4 0,4 C1,4 4,5 5,3 C6,0 3,1 0,4Z" fill="#e8a0aa" stroke="#c4687a" stroke-width="1"/>
+    <circle cx="0" cy="4" r="1.2" fill="#c4687a"/>
+  </g>
+</svg>
+
+<div class="app">
+  <!-- TOPBAR -->
+  <div class="topbar">
+    <div>
+      <div class="logo">the <em>post machine</em></div>
+      <div class="logo-sub">words that sound like you, just sharper</div>
+    </div>
+    <div class="tab-btns">
+      <button class="tab-btn on" onclick="switchView('generate',this)">✦ generate</button>
+      <button class="tab-btn" onclick="switchView('tones',this)">tone library</button>
+    </div>
+  </div>
+
+  <!-- LEFT: SAVED TOPICS -->
+  <div class="col-left">
+    <div class="col-label">saved topics</div>
+    <div id="topicsList"></div>
+    <div class="add-topic-form">
+      <div class="add-topic-row">
+        <input class="add-topic-input" id="topicInput" placeholder="paste url, headline, or topic..." onkeydown="if(event.key==='Enter'){event.preventDefault();addTopic();}">
+        <input class="add-topic-tag" id="topicTag" placeholder="tag" list="tagList">
+        <datalist id="tagList">
+          <option value="brand">
+          <option value="content">
+          <option value="ai">
+          <option value="life">
+          <option value="work">
+        </datalist>
+      </div>
+      <button class="add-topic-btn" style="width:100%" onclick="addTopic()">+ save topic</button>
+    </div>
+  </div>
+
+  <!-- CENTRE -->
+  <div class="col-centre">
+
+    <!-- GENERATE VIEW -->
+    <div class="view active" id="view-generate">
+      <div class="section-title">what's the raw material?</div>
+      <div class="section-sub">paste content, a url, or just your unfiltered thought</div>
+      <div class="input-modes">
+        <button class="mode-btn on" id="modeContent" onclick="setMode('content')">📋 content / url</button>
+        <button class="mode-btn" id="modeThought" onclick="setMode('thought')">💭 i have a thought</button>
+      </div>
+      <textarea class="main-input" id="mainInput" oninput="updateChar()" placeholder="paste anything here — a linkedin post you saw, a headline, a url, a vibe, a half-formed rant..."></textarea>
+      <div class="input-footer">
+        <span class="char-hint" id="charHint">0 chars</span>
+        <button class="generate-btn" id="genBtn" onclick="generate()">generate ✦</button>
+      </div>
+
+      <!-- VOICE PICKER -->
+      <div class="voice-section">
+        <div class="col-label" style="margin-top:0.8rem">voices</div>
+        <div class="voice-picker-note" id="voiceNote">wildcard + yours always included. pick up to 3 more.</div>
+        <div class="voice-pills" id="voicePills"></div>
+      </div>
+
+      <!-- PROGRESS -->
+      <div class="progress-wrap" id="progressWrap">
+        <div class="progress-label">
+          <span id="progressLabel">generating...</span>
+          <span id="progressPct">0%</span>
+        </div>
+        <div class="progress-bar-bg"><div class="progress-bar-fill" id="progressFill"></div></div>
+      </div>
+
+      <!-- OUTPUT -->
+      <div class="output-wrap" id="outputWrap">
+        <div class="output-nav">
+          <span class="output-nav-label" id="outputNavLabel">voice 1 of 5</span>
+          <div class="nav-dots" id="navDots"></div>
+          <div class="nav-arrows">
+            <button class="nav-arr" onclick="prevCard()">←</button>
+            <button class="nav-arr" onclick="nextCard()">→</button>
+          </div>
+        </div>
+        <div id="cardContainer"></div>
+      </div>
+    </div>
+
+    <!-- TONE LIBRARY VIEW -->
+    <div class="view" id="view-tones">
+      <div class="section-title" style="margin-bottom:0.25rem">tone library</div>
+      <div class="section-sub" style="margin-bottom:1.3rem">paste 3–5 samples per voice. the more specific the samples, the sharper the dna.</div>
+      <div class="tone-grid" id="toneGrid"></div>
+      <button class="tone-add-btn" onclick="openToneModal()">+ add a new voice</button>
+    </div>
+
+  </div>
+
+  <!-- RIGHT: HISTORY -->
+  <div class="col-right">
+    <div class="col-label">history</div>
+    <div id="histList"></div>
+  </div>
+</div>
+
+<!-- TONE MODAL -->
+<div class="modal-overlay" id="toneModal" onclick="overlayClose(event)">
+  <div class="modal">
+    <h3>add a voice</h3>
+    <div class="modal-sub">paste 3 samples minimum (5 max). hit enter after each to open the next box. analyse first — only save if you're happy.</div>
+    <div class="f-field">
+      <label class="f-label">voice name</label>
+      <input class="f-input" id="t-name" placeholder="e.g. jahanvi, neha lohia, my future self...">
+    </div>
+    <div class="f-field">
+      <label class="f-label">writing samples <span id="sampleCountLabel" style="color:var(--pink);font-weight:600"></span></label>
+      <div class="sample-boxes" id="sampleBoxes"></div>
+      <div class="sample-hint" id="sampleHint">paste sample 1 and hit enter to add more (min 3, max 5)</div>
+    </div>
+    <div class="analysis-progress" id="apWrap">
+      <div class="ap-label"><span id="apLabel">extracting voice dna...</span><span id="apPct">0%</span></div>
+      <div class="ap-bar-bg"><div class="ap-fill" id="apFill"></div></div>
+    </div>
+    <div class="analysis-result" id="analysisResult">
+      <div class="analysis-result-label">voice dna extracted</div>
+      <div class="analysis-result-text" id="analysisResultText"></div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn-analyse" id="btnAnalyse" onclick="runAnalysis()">analyse voice ✦</button>
+      <button class="btn-save" id="btnSave" onclick="saveTone()">save to library ✦</button>
+      <button class="btn-reject" id="btnReject" onclick="rejectAnalysis()">try again</button>
+      <button class="btn-cancel" id="btnCancel" onclick="cancelAll()">cancel</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ── STATE ─────────────────────────────────────────────────────────
+const SK = 'postMachineV2';
+let S = JSON.parse(localStorage.getItem(SK)||'null') || {
+  ratings:{kartik:[],soumya:[],althea:[],kelly:[],wildcard:[]},
+  history:[],
+  tones:[],
+  topics:[],
+};
+function save(){ localStorage.setItem(SK,JSON.stringify(S)); }
+
+// ── BUILT-IN VOICES ───────────────────────────────────────────────
+const BUILTIN = [
+  {id:'kartik', name:'kartik', dna:'deadpan precision. always lowercase. builds slowly with short punchy lines then lands one devastating closer that reframes everything. self-aware about hustle culture absurdity. never explains the joke. the last line does ALL the work. no emojis. no hashtags.', builtin:true},
+  {id:'soumya', name:'soumya', dna:'loud and unapologetic. hinglish code-switching when emotion demands it (yaar, woh wali feeling). bold opinions stated as facts. feminist undercurrent baked into humour not stated separately. uses caps for drama. repeats for rhythm. ends on a punch or mic drop. no wishy-washy qualifiers.', builtin:true},
+  {id:'kelly',  name:'kelly jones', dna:'perception strategist who reads rooms instinctively. credibility without institutional backing — authority comes from precision not credentials. speaks in outcomes not processes. direct, never cold. the confidence of someone who knows exactly what they bring. no filler, no hedging.', builtin:true},
+];
+const LOCKED_VOICES = ['althea','wildcard'];
+
+// ── VOICE STATE ───────────────────────────────────────────────────
+let selectedVoices = ['kartik','soumya','kelly']; // default 3 pickable
+let currentPosts = []; // {voiceId, text, status:'pending'|'streaming'|'done'}
+let currentIdx = 0;
+let isThought = false;
+let analysisAbortController = null;
+let pendingDna = '';
+let pendingToneName = '';
+
+// ── ALL ACTIVE VOICES ─────────────────────────────────────────────
+function getAllVoices(){
+  const customs = S.tones.map(t=>({id:t.id,name:t.name,dna:t.dna,builtin:false}));
+  return [...BUILTIN,...customs];
+}
+function getPickableVoices(){ return getAllVoices(); }
+function getGenerationVoices(){
+  // always: althea + wildcard + selectedVoices (up to 3)
+  return ['althea','wildcard',...selectedVoices].slice(0,5);
+}
+
+// ── RENDER VOICE PILLS ────────────────────────────────────────────
+function renderVoicePills(){
+  const el = document.getElementById('voicePills');
+  const pickable = getPickableVoices();
+  const total = 2 + selectedVoices.length;
+  document.getElementById('voiceNote').textContent =
+    `wildcard + yours always included. ${selectedVoices.length}/3 additional voices selected.`;
+
+  el.innerHTML =
+    // locked pills
+    `<button class="vpill locked" title="always included">yours ✦</button>` +
+    `<button class="vpill locked" title="always included">wildcard ✦</button>` +
+    // pickable pills
+    pickable.map(v=>`
+      <button class="vpill ${selectedVoices.includes(v.id)?'on':''}" data-vid="${v.id}" onclick="toggleVoice('${v.id}',this)">${v.name}</button>
+    `).join('');
+}
+
+function toggleVoice(id, el){
+  if(selectedVoices.includes(id)){
+    selectedVoices = selectedVoices.filter(x=>x!==id);
+    el.classList.remove('on');
+  } else {
+    if(selectedVoices.length>=3){ return; } // max 3
+    selectedVoices.push(id);
+    el.classList.add('on');
+  }
+  renderVoicePills();
+}
+
+// ── TOPICS ────────────────────────────────────────────────────────
+function renderTopics(){
+  const el = document.getElementById('topicsList');
+  if(!S.topics.length){ el.innerHTML='<div class="topics-empty">save topics to use as prompts ✦</div>'; return; }
+  el.innerHTML = S.topics.map((t,i)=>`
+    <div class="topic-card">
+      <div class="topic-card-inner">
+        <button class="topic-use-btn" onclick="useTopic(${i})">
+          <div class="topic-tag">${t.tag||'topic'}</div>
+          <div class="topic-text">${t.text}</div>
+        </button>
+        <button class="topic-del" onclick="deleteTopic(${i})" title="remove">✕</button>
+      </div>
+    </div>
+  `).join('');
+}
+function addTopic(){
+  const txt = document.getElementById('topicInput').value.trim();
+  const tag = document.getElementById('topicTag').value.trim()||'topic';
+  if(!txt) return;
+  S.topics.unshift({text:txt,tag});
+  save(); renderTopics();
+  document.getElementById('topicInput').value='';
+  document.getElementById('topicTag').value='';
+}
+function deleteTopic(i){ S.topics.splice(i,1); save(); renderTopics(); }
+function useTopic(i){
+  document.getElementById('mainInput').value = S.topics[i].text;
+  updateChar();
+  setMode('content');
+}
+
+// ── INPUT ─────────────────────────────────────────────────────────
+function updateChar(){
+  const l = document.getElementById('mainInput').value.length;
+  document.getElementById('charHint').textContent = `${l} chars`;
+}
+function setMode(m){
+  isThought = m==='thought';
+  document.getElementById('modeContent').classList.toggle('on',m==='content');
+  document.getElementById('modeThought').classList.toggle('on',m==='thought');
+  document.getElementById('mainInput').placeholder = m==='thought'
+    ? 'drop the thought. unfiltered. raw. that\'s the point...'
+    : 'paste anything — a post you saw, a headline, a url, a vibe, a half-formed idea...';
+}
+
+// ── RATING CONTEXT ────────────────────────────────────────────────
+function ratingCtx(vid){
+  const r = S.ratings[vid]||[];
+  if(!r.length) return '';
+  const avg = (r.reduce((a,b)=>a+b,0)/r.length).toFixed(1);
+  const last5 = r.slice(-5);
+  const hi = r.filter(x=>x>=4).length, lo = r.filter(x=>x<=2).length;
+  return `\n\nRating context for this voice: avg ${avg}/5 across ${r.length} posts. Last 5: [${last5.join(',')}]. High ratings(4-5): ${hi}, low ratings(1-2): ${lo}. Calibrate toward what earns higher ratings.`;
+}
+
+// ── VOICE PROMPTS ─────────────────────────────────────────────────
+function buildPrompt(vid, input, isThought){
+  const allV = [...BUILTIN,...S.tones.map(t=>({id:t.id,name:t.name,dna:t.dna}))];
+  const voiceDef = allV.find(v=>v.id===vid);
+  const rc = ratingCtx(vid);
+  const inputLine = isThought
+    ? `Raw intrusive thought/observation — preserve the raw unfiltered energy, just shape it shareable:\n"${input}"`
+    : `Source material/inspiration:\n"${input}"`;
+
+  if(vid==='althea'){
+    return `You are writing in ALTHEA's voice — the user's own voice. Style DNA: playful, self-aware, slightly chaotic energy. warm but not soft. slightly cynical. genuinely funny and observational. always lowercase. no emojis unless they EARN it (rare). NEVER engagement bait. psychology as a lived lens — notices patterns in people, finds human behaviour fascinating. emotional storytelling via real moments not speeches. dialogue used sparingly. never sounds like a linkedin person trying to not sound like a linkedin person. the irony is effortless not performed.${rc}
+
+${inputLine}
+
+Write ONLY the post. No preamble. No "here's your post:". Just the post. 3-9 lines. No hashtags. Lowercase.`;
+  }
+
+  if(vid==='wildcard'){
+    return `You are the WILDCARD voice. Pick ONE totally unexpected creative angle — nature documentary voiceover, ancient philosopher on modern linkedin, product recall notice, horoscope reading, villain's origin story, out-of-office from 2045, academic abstract, warning label, stage direction. Commit fully to the bit. Keep the core insight. State your angle in brackets at the top: [voice: ...].${rc}
+
+${inputLine}
+
+Write ONLY the post. No preamble. Just the post.`;
+  }
+
+  if(voiceDef){
+    return `You are writing in ${voiceDef.name}'s voice.\nStyle DNA: ${voiceDef.dna}${rc}
+
+${inputLine}
+
+Write ONLY the post. No preamble. No "here's your post:". Just the post. 3-9 lines. No hashtags.`;
+  }
+
+  return `Write a LinkedIn post about: "${input}". Be concise and authentic.`;
+}
+
+// ── GENERATE ─────────────────────────────────────────────────────
+
+async function callAI(prompt, maxTokens) {
+  const res = await fetch('/api/claude', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ prompt: prompt, max_tokens: maxTokens || 600 })
+  });
+  const d = await res.json();
+  if (d.error) throw new Error(d.error);
+  return d.text || '';
+}
+
+async function generate(){
+  const input = document.getElementById('mainInput').value.trim();
+  if(!input){ document.getElementById('mainInput').style.borderColor='var(--pink)'; return; }
+
+  const voices = getGenerationVoices();
+  if(!voices.length){ return; }
+
+  currentPosts = voices.map(v=>({voiceId:v, text:'', status:'pending'}));
+  currentIdx = 0;
+
+  // show progress
+  document.getElementById('progressWrap').style.display='block';
+  document.getElementById('outputWrap').style.display='none';
+  document.getElementById('genBtn').disabled=true;
+  setProgress(0,'warming up...');
+
+  // render output area with pending cards
+  document.getElementById('outputWrap').style.display='block';
+  renderNav();
+  renderCard(0);
+
+  // generate one by one, show each as it arrives
+  for(let i=0;i<currentPosts.length;i++){
+    const p = currentPosts[i];
+    const pct = Math.round((i/currentPosts.length)*100);
+    setProgress(pct, `generating ${getVoiceDisplayName(p.voiceId)} (${i+1}/${currentPosts.length})...`);
+
+    currentPosts[i].status = 'streaming';
+    if(currentIdx===i) renderCard(i);
+
+    try {
+      const prompt = buildPrompt(p.voiceId, input, isThought);
+      const raw = (await callAI(prompt, 600)) || 'could not generate this voice.';
+      currentPosts[i].text = raw;
+      currentPosts[i].status = 'done';
+    } catch(e){
+      currentPosts[i].text = 'something went wrong. try again.';
+      currentPosts[i].status = 'done';
+    }
+
+    if(currentIdx===i) renderCard(i);
+    renderNav();
+
+    // small breath between calls
+    if(i<currentPosts.length-1) await sleep(300);
+  }
+
+  setProgress(100,'done ✦');
+  setTimeout(()=>{ document.getElementById('progressWrap').style.display='none'; },1200);
+  document.getElementById('genBtn').disabled=false;
+
+  // save to history
+  S.history.unshift({
+    prompt: input.slice(0,80)+(input.length>80?'...':''),
+    isThought,
+    date: new Date().toLocaleDateString('en-GB',{day:'numeric',month:'short'}),
+    posts: currentPosts.map(p=>({voiceId:p.voiceId,text:p.text})),
+  });
+  if(S.history.length>50) S.history=S.history.slice(0,50);
+  save();
+  renderHistory();
+}
+
+function sleep(ms){ return new Promise(r=>setTimeout(r,ms)); }
+function setProgress(pct, label){
+  document.getElementById('progressFill').style.width = pct+'%';
+  document.getElementById('progressLabel').textContent = label;
+  document.getElementById('progressPct').textContent = pct+'%';
+}
+
+// ── RENDER CARD ───────────────────────────────────────────────────
+const VOICE_DESCS = {
+  kartik:'deadpan · devastating closer',
+  soumya:'loud · hinglish · unapologetic',
+  althea:'playful · self-aware · observational',
+  kelly:'perception strategist · reads the room',
+  wildcard:'something unexpected every time',
+};
+function getVoiceDisplayName(vid){
+  if(vid==='althea') return 'yours';
+  const all = [...BUILTIN,...S.tones];
+  const v = all.find(x=>x.id===vid);
+  return v?v.name:vid;
+}
+function extractWild(t){ const m=t.match(/^\[voice:\s*(.+?)\]/i); return m?m[1]:'wildcard'; }
+function stripWild(t){ return t.replace(/^\[voice:\s*.+?\]\n?/i,'').trim(); }
+
+function renderCard(i){
+  const container = document.getElementById('cardContainer');
+  const p = currentPosts[i];
+  if(!p){ container.innerHTML=''; return; }
+
+  const isWild = p.voiceId==='wildcard';
+  const displayName = getVoiceDisplayName(p.voiceId);
+  const wildcardLabel = isWild&&p.status==='done' ? extractWild(p.text) : 'wildcard';
+  const displayText = isWild&&p.status==='done' ? stripWild(p.text) : p.text;
+  const desc = VOICE_DESCS[p.voiceId]||'';
+  const existing = lastRating(p.voiceId);
+
+  if(p.status==='pending'){
+    container.innerHTML=`<div class="post-card"><div class="card-pending">waiting for ${displayName}...</div></div>`;
+    return;
+  }
+  if(p.status==='streaming'){
+    container.innerHTML=`<div class="post-card"><div class="card-pending">writing ${displayName}<span class="streaming-cursor"></span></div></div>`;
+    return;
+  }
+
+  container.innerHTML=`
+    <div class="post-card">
+      <div class="card-voice-row">
+        <span class="vbadge ${isWild?'wild':''}">${isWild?'wildcard — '+wildcardLabel:displayName}</span>
+        <span class="vdesc">${desc}</span>
+      </div>
+      <div class="post-text" id="pt-${p.voiceId}" contenteditable="true" data-placeholder="post text...">${displayText}</div>
+      <div class="card-actions">
+        <div class="stars" id="stars-${p.voiceId}">
+          ${[1,2,3,4,5].map(n=>`<button class="star ${existing>=n?'on':''}" onclick="rate('${p.voiceId}',${n})">★</button>`).join('')}
+        </div>
+        <span class="rating-txt" id="rtxt-${p.voiceId}">${existing?`rated ${existing}/5`:'rate this variation'}</span>
+        <button class="copy-btn" id="cpbtn-${p.voiceId}" onclick="copyPost('${p.voiceId}')">copy</button>
+      </div>
+    </div>`;
+}
+
+function renderNav(){
+  const dots = document.getElementById('navDots');
+  document.getElementById('outputNavLabel').textContent = `voice ${currentIdx+1} of ${currentPosts.length}`;
+  dots.innerHTML = currentPosts.map((p,i)=>
+    `<button class="ndot ${i===currentIdx?'on':p.status==='done'?'done':''}" onclick="goCard(${i})"></button>`
+  ).join('');
+}
+function goCard(i){ currentIdx=i; renderCard(i); renderNav(); }
+function nextCard(){ if(currentIdx<currentPosts.length-1){ currentIdx++; renderCard(currentIdx); renderNav(); } }
+function prevCard(){ if(currentIdx>0){ currentIdx--; renderCard(currentIdx); renderNav(); } }
+
+// ── RATE ──────────────────────────────────────────────────────────
+function lastRating(vid){ const r=S.ratings[vid]||[]; return r.length?r[r.length-1]:0; }
+function rate(vid,n){
+  if(!S.ratings[vid]) S.ratings[vid]=[];
+  S.ratings[vid].push(n);
+  if(S.ratings[vid].length>100) S.ratings[vid]=S.ratings[vid].slice(-100);
+  save();
+  document.querySelectorAll(`#stars-${vid} .star`).forEach((s,i)=>s.classList.toggle('on',i<n));
+  const el=document.getElementById(`rtxt-${vid}`);
+  if(el) el.textContent=`rated ${n}/5 ✦`;
+}
+
+// ── COPY ──────────────────────────────────────────────────────────
+function copyPost(vid){
+  const el=document.getElementById(`pt-${vid}`);
+  if(!el) return;
+  navigator.clipboard.writeText(el.innerText).then(()=>{
+    const btn=document.getElementById(`cpbtn-${vid}`);
+    if(btn){ btn.textContent='copied ✦'; btn.classList.add('done'); setTimeout(()=>{btn.textContent='copy';btn.classList.remove('done');},2000); }
+  });
+}
+
+// ── HISTORY ───────────────────────────────────────────────────────
+function renderHistory(){
+  const el=document.getElementById('histList');
+  if(!S.history.length){ el.innerHTML='<div class="hist-empty">generated posts appear here ✦</div>'; return; }
+  el.innerHTML=S.history.slice(0,20).map((h,i)=>`
+    <div class="hist-item" onclick="loadHist(${i})">
+      <div class="hist-prompt">${h.isThought?'💭 ':''}"${h.prompt}"</div>
+      <div class="hist-meta">${h.date}</div>
+    </div>`).join('');
+}
+function loadHist(i){
+  const h=S.history[i]; if(!h||!h.posts) return;
+  currentPosts=h.posts.map(p=>({...p,status:'done'}));
+  currentIdx=0;
+  document.getElementById('mainInput').value=h.prompt;
+  document.getElementById('outputWrap').style.display='block';
+  document.getElementById('progressWrap').style.display='none';
+  renderNav(); renderCard(0);
+  switchView('generate',document.querySelector('.tab-btn'));
+}
+
+// ── TONE LIBRARY ──────────────────────────────────────────────────
+function renderTones(){
+  const grid=document.getElementById('toneGrid');
+  const all=[...BUILTIN,...S.tones];
+  grid.innerHTML=all.map(t=>`
+    <div class="tone-card">
+      <div class="tone-name">${t.name}${t.builtin?` <span class="tone-builtin-tag">(built-in)</span>`:''}</div>
+      <div class="tone-dna">${t.dna.slice(0,130)}${t.dna.length>130?'...':''}</div>
+    </div>`).join('');
+}
+
+// ── TONE MODAL — SAMPLE BOXES ─────────────────────────────────────
+let sampleCount = 1;
+let analysisAbort = false;
+
+function openToneModal(){
+  document.getElementById('toneModal').classList.add('open');
+  document.getElementById('t-name').value='';
+  document.getElementById('analysisResult').style.display='none';
+  document.getElementById('apWrap').style.display='none';
+  document.getElementById('btnSave').style.display='none';
+  document.getElementById('btnReject').style.display='none';
+  document.getElementById('btnAnalyse').disabled=false;
+  document.getElementById('btnAnalyse').style.display='inline-block';
+  pendingDna=''; pendingToneName=''; analysisAbort=false;
+  sampleCount=1;
+  buildSampleBoxes();
+}
+function buildSampleBoxes(){
+  const el=document.getElementById('sampleBoxes');
+  el.innerHTML='';
+  for(let i=0;i<sampleCount;i++) el.appendChild(makeSampleBox(i));
+  updateSampleHint();
+  updateSampleCount();
+}
+function makeSampleBox(i){
+  const wrap=document.createElement('div');
+  wrap.className='sample-box-wrap';
+  const ta=document.createElement('textarea');
+  ta.className='sample-box';
+  ta.id=`sample-${i}`;
+  ta.rows=3;
+  ta.placeholder=`sample ${i+1}${i===0?' (required)':i<2?' (required)':''}...`;
+  ta.addEventListener('keydown',e=>{
+    if(e.key==='Enter'&&!e.shiftKey){
+      e.preventDefault();
+      if(ta.value.trim()&&sampleCount<5){
+        sampleCount++;
+        buildSampleBoxes();
+        setTimeout(()=>document.getElementById(`sample-${sampleCount-1}`)?.focus(),50);
+      }
+    }
+  });
+  wrap.appendChild(ta);
+  return wrap;
+}
+function updateSampleHint(){
+  const h=document.getElementById('sampleHint');
+  if(sampleCount<3) h.textContent=`paste sample and hit enter for next (min 3, max 5)`;
+  else if(sampleCount<5) h.textContent=`hit enter to add more (${sampleCount}/5) or analyse now`;
+  else h.textContent=`5 samples added. ready to analyse.`;
+}
+function updateSampleCount(){
+  document.getElementById('sampleCountLabel').textContent=`${sampleCount}/5`;
+}
+function getSamples(){
+  const s=[];
+  for(let i=0;i<sampleCount;i++){
+    const v=(document.getElementById(`sample-${i}`)?.value||'').trim();
+    if(v) s.push(v);
+  }
+  return s;
+}
+
+async function runAnalysis(){
+  const name=document.getElementById('t-name').value.trim();
+  const samples=getSamples();
+  if(!name){ document.getElementById('t-name').style.borderColor='var(--pink)'; return; }
+  if(samples.length<3){ document.getElementById('sampleHint').style.color='var(--pink)'; document.getElementById('sampleHint').textContent='need at least 3 samples to analyse properly'; return; }
+
+  analysisAbort=false;
+  pendingToneName=name;
+  document.getElementById('btnAnalyse').disabled=true;
+  document.getElementById('apWrap').style.display='block';
+  document.getElementById('analysisResult').style.display='none';
+  document.getElementById('btnSave').style.display='none';
+  document.getElementById('btnReject').style.display='none';
+
+  // progress simulation tied to actual api call
+  let prog=0;
+  const progInterval=setInterval(()=>{
+    if(analysisAbort){ clearInterval(progInterval); return; }
+    if(prog<85){ prog+=Math.random()*8; setAP(Math.min(85,prog),'extracting voice dna...'); }
+  },400);
+
+  try {
+    const prompt=`Analyse these ${samples.length} writing samples from "${name}" and extract a precise voice DNA in 4-6 sentences. Be specific not generic. Cover: sentence length/rhythm, capitalisation habits, emotional register/tone, signature opening moves, signature closing moves, what this voice would NEVER do, and any distinctive patterns or recurring devices.\n\nSamples:\n${samples.map((s,i)=>`[${i+1}] ${s}`).join('\n\n')}`;
+
+    if(analysisAbort){ clearInterval(progInterval); return; }
+    const dna = (await callAI(prompt, 400)) || 'could not extract dna.';
+    pendingDna=dna;
+
+    clearInterval(progInterval);
+    setAP(100,'analysis complete ✦');
+
+    document.getElementById('analysisResultText').textContent=dna;
+    document.getElementById('analysisResult').style.display='block';
+    document.getElementById('btnSave').style.display='inline-block';
+    document.getElementById('btnReject').style.display='inline-block';
+    document.getElementById('btnAnalyse').style.display='none';
+
+  } catch(e){
+    clearInterval(progInterval);
+    if(!analysisAbort){
+      setAP(0,'analysis failed. try again.');
+      document.getElementById('btnAnalyse').disabled=false;
+    }
+  }
+}
+
+function setAP(pct,label){
+  document.getElementById('apFill').style.width=pct+'%';
+  document.getElementById('apLabel').textContent=label;
+  document.getElementById('apPct').textContent=Math.round(pct)+'%';
+}
+
+function rejectAnalysis(){
+  pendingDna=''; pendingToneName='';
+  document.getElementById('analysisResult').style.display='none';
+  document.getElementById('apWrap').style.display='none';
+  document.getElementById('btnSave').style.display='none';
+  document.getElementById('btnReject').style.display='none';
+  document.getElementById('btnAnalyse').style.display='inline-block';
+  document.getElementById('btnAnalyse').disabled=false;
+}
+
+function saveTone(){
+  if(!pendingDna||!pendingToneName) return;
+  const newT={id:'custom_'+Date.now(),name:pendingToneName,dna:pendingDna,builtin:false};
+  S.tones.push(newT);
+  if(!S.ratings[newT.id]) S.ratings[newT.id]=[];
+  save();
+  selectedVoices.push(newT.id);
+  if(selectedVoices.length>3) selectedVoices=selectedVoices.slice(-3);
+  renderVoicePills();
+  renderTones();
+  closeToneModal();
+}
+
+function cancelAll(){
+  analysisAbort=true;
+  closeToneModal();
+}
+function closeToneModal(){ document.getElementById('toneModal').classList.remove('open'); }
+function overlayClose(e){ if(e.target.id==='toneModal'){ analysisAbort=true; closeToneModal(); } }
+
+// ── VIEW SWITCH ───────────────────────────────────────────────────
+function switchView(name,btn){
+  document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
+  document.getElementById('view-'+name).classList.add('active');
+  document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('on'));
+  if(btn) btn.classList.add('on');
+  if(name==='tones') renderTones();
+}
+
+// ── COQUETTE CURSOR + SPARKLE TRAIL ──────────────────────────────
+(function(){
+  const cursor=document.getElementById('coquette-cursor');
+  const COLS=['#c4687a','#e8a0aa','#ffd700','#f5d5d0','#fdeef0','#e8c870','#ffffff'];
+  const SHAPES=['✦','★','✧','·','⋆','˚','♡'];
+
+  document.addEventListener('mousemove',e=>{
+    cursor.style.left=e.clientX+'px';
+    cursor.style.top=e.clientY+'px';
+
+    if(Math.random()>0.45){
+      const s=document.createElement('div');
+      s.className='sparkle-trail';
+      const size=3+Math.random()*7;
+      const col=COLS[Math.floor(Math.random()*COLS.length)];
+      const dx=(Math.random()-0.5)*50;
+      const dy=-(15+Math.random()*35);
+      if(Math.random()>0.5){
+        s.style.cssText=`position:fixed;left:${e.clientX+(Math.random()-0.5)*14}px;top:${e.clientY+(Math.random()-0.5)*14}px;font-size:${size+4}px;color:${col};text-shadow:0 0 5px ${col};--dx:${dx}px;--dy:${dy}px;line-height:1;pointer-events:none;z-index:99997;animation:sparkFade 0.65s forwards;`;
+        s.textContent=SHAPES[Math.floor(Math.random()*SHAPES.length)];
+      } else {
+        s.style.cssText=`position:fixed;left:${e.clientX+(Math.random()-0.5)*14}px;top:${e.clientY+(Math.random()-0.5)*14}px;width:${size}px;height:${size}px;background:${col};border-radius:50%;box-shadow:0 0 ${size}px ${col};--dx:${dx}px;--dy:${dy}px;pointer-events:none;z-index:99997;animation:sparkFade 0.65s forwards;`;
+      }
+      document.body.appendChild(s);
+      setTimeout(()=>s.remove(),700);
+    }
+  });
+})();
+
+// ── INIT ──────────────────────────────────────────────────────────
+renderVoicePills();
+renderTopics();
+renderHistory();
+</script>
+</body>
+</html>
