@@ -6,7 +6,7 @@ exports.handler = async function(event) {
   try {
     const body = JSON.parse(event.body);
     const prompt = body.prompt || '';
-    const maxTokens = body.max_tokens || 600;
+    const maxTokens = body.max_tokens || 1200;
 
     const geminiBody = {
       contents: [{ parts: [{ text: prompt }] }],
@@ -48,7 +48,7 @@ exports.handler = async function(event) {
       return {
         statusCode: 200,
         headers: { 'Access-Control-Allow-Origin': '*', 'Content-Type': 'application/json' },
-        body: JSON.stringify({ error: `empty response. finishReason: ${reason}. blocked: ${blocked}. raw: ${JSON.stringify(data).slice(0,300)}` }),
+        body: JSON.stringify({ error: `empty. finishReason: ${reason}. blocked: ${blocked}` }),
       };
     }
 
