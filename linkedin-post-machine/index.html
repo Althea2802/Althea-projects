@@ -18,7 +18,6 @@
 body{font-family:'DM Sans',sans-serif;background:var(--cream);color:var(--text1);min-height:100vh;overflow-x:hidden;}
 
 /* COQUETTE CURSOR */
-* { cursor: none !important; }
 #coquette-cursor {
   position: fixed;
   pointer-events: none;
@@ -26,7 +25,12 @@ body{font-family:'DM Sans',sans-serif;background:var(--cream);color:var(--text1)
   width: 32px;
   height: 38px;
   transform: translate(-4px, -4px);
+  left: -100px;
+  top: -100px;
+  display: none;
 }
+body.cursor-active { cursor: none !important; }
+body.cursor-active * { cursor: none !important; }
 .sparkle-trail {
   position: fixed;
   pointer-events: none;
@@ -910,8 +914,14 @@ function switchView(name,btn){
   const cursor=document.getElementById('coquette-cursor');
   const COLS=['#c4687a','#e8a0aa','#ffd700','#f5d5d0','#fdeef0','#e8c870','#ffffff'];
   const SHAPES=['✦','★','✧','·','⋆','˚','♡'];
+  let cursorReady=false;
 
   document.addEventListener('mousemove',e=>{
+    if(!cursorReady){
+      cursorReady=true;
+      cursor.style.display='block';
+      document.body.classList.add('cursor-active');
+    }
     cursor.style.left=e.clientX+'px';
     cursor.style.top=e.clientY+'px';
 
@@ -935,9 +945,11 @@ function switchView(name,btn){
 })();
 
 // ── INIT ──────────────────────────────────────────────────────────
-renderVoicePills();
-renderTopics();
-renderHistory();
+document.addEventListener('DOMContentLoaded', function(){
+  renderVoicePills();
+  renderTopics();
+  renderHistory();
+});
 </script>
 </body>
 </html>
