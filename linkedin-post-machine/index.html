@@ -377,10 +377,11 @@ const BUILTIN = [
 const LOCKED_VOICES = ['althea','wildcard'];
 
 // ── VOICE STATE ───────────────────────────────────────────────────
-let selectedVoices = ['kartik','soumya','kelly']; // default 3 pickable
-let currentPosts = []; // {voiceId, text, status:'pending'|'streaming'|'done'}
+let selectedVoices = ['kartik','soumya','kelly'];
+let currentPosts = [];
 let currentIdx = 0;
 let isThought = false;
+let postLength = 'short';
 let analysisAbortController = null;
 let pendingDna = '';
 let pendingToneName = '';
@@ -492,35 +493,39 @@ function buildPrompt(vid, input, isThought){
   const allV = [...BUILTIN,...S.tones.map(t=>({id:t.id,name:t.name,dna:t.dna}))];
   const voiceDef = allV.find(v=>v.id===vid);
   const rc = ratingCtx(vid);
+  const isLong = postLength === 'long';
+  const lenInstr = isLong
+    ? 'Write 6-9 lines. Build a narrative arc. Give it room to breathe. Story first, insight lands at the end.'
+    : 'Write 3-5 lines. Tight, punchy, no fluff.';
   const inputLine = isThought
-    ? `Raw intrusive thought/observation — preserve the raw unfiltered energy, just shape it shareable:\n"${input}"`
-    : `Source material/inspiration:\n"${input}"`;
+    ? 'Raw intrusive thought — preserve the raw energy, shape it shareable:\n"' + input + '"'
+    : 'Source material:\n"' + input + '"';
 
   if(vid==='althea'){
-    return `You are writing in ALTHEA's voice — the user's own voice. Style DNA: playful, self-aware, slightly chaotic energy. warm but not soft. slightly cynical. genuinely funny and observational. always lowercase. no emojis unless they EARN it (rare). NEVER engagement bait. psychology as a lived lens — notices patterns in people, finds human behaviour fascinating. emotional storytelling via real moments not speeches. dialogue used sparingly. never sounds like a linkedin person trying to not sound like a linkedin person. the irony is effortless not performed.${rc}
-
-${inputLine}
-
-Write ONLY the post. No preamble. No "here's your post:". Just the post. 3-9 lines. No hashtags. Lowercase.`;
+    return 'You are writing in ALTHEA's voice — the user's own voice, nail it. Style DNA: playful, self-aware, slightly chaotic. warm but not soft. slightly cynical. genuinely funny and observational. always lowercase. no emojis unless they EARN it. NEVER engagement bait. psychology as a lived lens. emotional storytelling via real moments not speeches. dialogue used sparingly. never sounds like a linkedin person trying not to sound like one. irony is effortless not performed.\n' + rc + '\n\n' + inputLine + '\n\n' + lenInstr + ' Write ONLY the post. No preamble. No hashtags. Lowercase.';
   }
 
   if(vid==='wildcard'){
-    return `You are the WILDCARD voice. Pick ONE totally unexpected creative angle — nature documentary voiceover, ancient philosopher on modern linkedin, product recall notice, horoscope reading, villain's origin story, out-of-office from 2045, academic abstract, warning label, stage direction. Commit fully to the bit. Keep the core insight. State your angle in brackets at the top: [voice: ...].${rc}
+    return 'You are the WILDCARD voice. Pick ONE unexpected creative angle — nature documentary voiceover, ancient philosopher on modern linkedin, product recall notice, horoscope reading, villain origin story, out-of-office from 2045, academic abstract, warning label, stage direction. Commit fully. Keep the core insight. State angle in brackets at top: [voice: ...].\n' + rc + '\n\n' + inputLine + '\n\n' + lenInstr + ' Write ONLY the post. No preamble.';
+  }
 
-${inputLine}
+  if(vid==='kartik'){
+    return 'You are writing in KARTIK's voice. Style DNA: deadpan precision. always lowercase. builds slowly with short punchy lines then ONE devastating closer that reframes everything. self-aware about hustle culture absurdity. never explains the joke. the last line does ALL the work. no emojis. no hashtags.\n' + rc + '\n\n' + inputLine + '\n\n' + lenInstr + ' Write ONLY the post. No preamble. Lowercase. No hashtags.';
+  }
 
-Write ONLY the post. No preamble. ${postLength==='short'?'Keep it punchy, 3-5 lines':'Go longer, 6-9 lines with full narrative arc'}. Just the post.`;
+  if(vid==='soumya'){
+    return 'You are writing in SOUMYA's voice. Style DNA: loud and unapologetic. hinglish code-switching when emotion demands it (yaar, woh wali feeling, sach bol rahi hoon). bold opinions stated as facts. uses ALL CAPS for drama and emphasis. repeats a word or phrase for rhythm. ends on a punch or mic drop. NEVER wishy-washy. feminist undercurrent baked into humour not stated separately.\n' + rc + '\n\n' + inputLine + '\n\n' + lenInstr + ' Write ONLY the post. No preamble. No hashtags.';
+  }
+
+  if(vid==='kelly'){
+    return 'You are writing in KELLY JONES's voice (the perception strategist from Fly Me to the Moon). Style DNA: reads rooms instinctively. credibility without institutional backing — authority from precision not credentials. speaks in outcomes not processes. direct never cold. three moves ahead. the confidence of someone who knows exactly what they bring. no filler, no hedging. every line earns its place.\n' + rc + '\n\n' + inputLine + '\n\n' + lenInstr + ' Write ONLY the post. No preamble. No hashtags.';
   }
 
   if(voiceDef){
-    return `You are writing in ${voiceDef.name}'s voice.\nStyle DNA: ${voiceDef.dna}${rc}
-
-${inputLine}
-
-Write ONLY the post. No preamble. No "here's your post:". Just the post. 3-9 lines. No hashtags.`;
+    return 'You are writing in ' + voiceDef.name + ''s voice.\nStyle DNA: ' + voiceDef.dna + '\n' + rc + '\n\n' + inputLine + '\n\n' + lenInstr + ' Write ONLY the post. No preamble. No hashtags.';
   }
 
-  return `Write a LinkedIn post about: "${input}". Be concise and authentic.`;
+  return 'Write a LinkedIn post about: "' + input + '". ' + lenInstr;
 }
 
 // ── GENERATE ─────────────────────────────────────────────────────
@@ -529,7 +534,7 @@ async function callAI(prompt, maxTokens) {
   const res = await fetch('/api/claude', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ prompt: prompt, max_tokens: maxTokens || 600 })
+    body: JSON.stringify({ prompt: prompt, max_tokens: maxTokens || 1200 })
   });
   const raw = await res.text();
   let d;
@@ -834,7 +839,7 @@ async function runAnalysis(){
     const prompt=`Analyse these ${samples.length} writing samples from "${name}" and extract a precise voice DNA in 4-6 sentences. Be specific not generic. Cover: sentence length/rhythm, capitalisation habits, emotional register/tone, signature opening moves, signature closing moves, what this voice would NEVER do, and any distinctive patterns or recurring devices.\n\nSamples:\n${samples.map((s,i)=>`[${i+1}] ${s}`).join('\n\n')}`;
 
     if(analysisAbort){ clearInterval(progInterval); return; }
-    const dna = (await callAI(prompt, 800)) || 'could not extract dna.';
+    const dna = (await callAI(prompt, 1000)) || 'could not extract dna.';
     pendingDna=dna;
 
     clearInterval(progInterval);
