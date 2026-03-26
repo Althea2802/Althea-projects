@@ -563,7 +563,7 @@ async function generate(){
       currentPosts[i].text = raw;
       currentPosts[i].status = 'done';
     } catch(e){
-      currentPosts[i].text = 'something went wrong. try again.';
+      currentPosts[i].text = 'error: ' + e.message;
       currentPosts[i].status = 'done';
     }
 
@@ -837,7 +837,7 @@ async function runAnalysis(){
   } catch(e){
     clearInterval(progInterval);
     if(!analysisAbort){
-      setAP(0,'analysis failed. try again.');
+      setAP(0,'failed: ' + e.message);
       document.getElementById('btnAnalyse').disabled=false;
     }
   }
