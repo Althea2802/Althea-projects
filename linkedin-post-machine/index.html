@@ -716,6 +716,7 @@ function renderTones(){
 
 // ── TONE MODAL — SAMPLE BOXES ─────────────────────────────────────
 let sampleCount = 1;
+let savedSamples = [];
 let analysisAbort = false;
 
 function openToneModal(){
@@ -729,33 +730,48 @@ function openToneModal(){
   document.getElementById('btnAnalyse').style.display='inline-block';
   pendingDna=''; pendingToneName=''; analysisAbort=false;
   sampleCount=1;
+  savedSamples=[];
   buildSampleBoxes();
 }
 function buildSampleBoxes(){
   const el=document.getElementById('sampleBoxes');
   el.innerHTML='';
-  for(let i=0;i<sampleCount;i++) el.appendChild(makeSampleBox(i));
+  for(let i=0;i<sampleCount;i++) el.appendChild(makeSampleBox(i, savedSamples[i]||''));
   updateSampleHint();
   updateSampleCount();
 }
-function makeSampleBox(i){
+function makeSampleBox(i, savedValue){
   const wrap=document.createElement('div');
   wrap.className='sample-box-wrap';
   const ta=document.createElement('textarea');
-  ta.className='sample-box';
-  ta.id=`sample-${i}`;
   ta.rows=3;
-  ta.placeholder=`sample ${i+1}${i===0?' (required)':i<2?' (required)':''}...`;
-  ta.addEventListener('keydown',e=>{
-    if(e.key==='Enter'&&!e.shiftKey){
-      e.preventDefault();
-      if(ta.value.trim()&&sampleCount<5){
-        sampleCount++;
-        buildSampleBoxes();
-        setTimeout(()=>document.getElementById(`sample-${sampleCount-1}`)?.focus(),50);
+  ta.id=`sample-${i}`;
+  if(savedValue){
+    ta.className='sample-box';
+    ta.value=savedValue;
+    ta.readOnly=true;
+    ta.style.background='var(--pink-blush)';
+    ta.style.borderColor='var(--pink-lt)';
+    ta.style.color='var(--text3)';
+  } else {
+    ta.className='sample-box';
+    ta.placeholder=`sample ${i+1}${i<2?' (required)':''}...`;
+    ta.addEventListener('keydown',e=>{
+      if(e.key==='Enter'&&!e.shiftKey){
+        e.preventDefault();
+        const val=ta.value.trim();
+        if(!val) return;
+        savedSamples[i]=val;
+        if(sampleCount<5){
+          sampleCount++;
+          buildSampleBoxes();
+          setTimeout(()=>document.getElementById(`sample-${sampleCount-1}`)?.focus(),50);
+        } else {
+          buildSampleBoxes();
+        }
       }
-    }
-  });
+    });
+  }
   wrap.appendChild(ta);
   return wrap;
 }
@@ -769,10 +785,11 @@ function updateSampleCount(){
   document.getElementById('sampleCountLabel').textContent=`${sampleCount}/5`;
 }
 function getSamples(){
-  const s=[];
-  for(let i=0;i<sampleCount;i++){
-    const v=(document.getElementById(`sample-${i}`)?.value||'').trim();
-    if(v) s.push(v);
+  const s=[...savedSamples.filter(Boolean)];
+  const lastBox=document.getElementById(`sample-${sampleCount-1}`);
+  if(lastBox&&lastBox.value.trim()&&!lastBox.readOnly){
+    const v=lastBox.value.trim();
+    if(!s.includes(v)) s.push(v);
   }
   return s;
 }
