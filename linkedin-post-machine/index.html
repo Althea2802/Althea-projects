@@ -519,9 +519,12 @@ async function callAI(prompt, maxTokens) {
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ prompt: prompt, max_tokens: maxTokens || 600 })
   });
-  const d = await res.json();
+  const raw = await res.text();
+  let d;
+  try { d = JSON.parse(raw); } catch(e) { throw new Error('bad response: ' + raw.slice(0,200)); }
   if (d.error) throw new Error(d.error);
-  return d.text || '';
+  if (!d.text) throw new Error('no text in response. full response: ' + JSON.stringify(d).slice(0,300));
+  return d.text;
 }
 
 async function generate(){
