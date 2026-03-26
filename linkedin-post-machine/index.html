@@ -102,6 +102,9 @@ body{font-family:'DM Sans',sans-serif;background:var(--cream);color:var(--text1)
 .generate-btn{margin-left:auto;padding:0.55rem 1.6rem;background:var(--pink);border:none;border-radius:20px;font-family:'DM Sans',sans-serif;font-weight:500;font-size:0.86rem;color:white;transition:all 0.2s;}
 .generate-btn:hover{background:var(--pink-deep);}
 .generate-btn:disabled{opacity:0.45;}
+.len-toggle{display:flex;gap:0;margin-bottom:0.7rem;border:1px solid var(--border);border-radius:20px;overflow:hidden;width:fit-content;}
+.len-btn{padding:0.3rem 0.9rem;font-size:0.76rem;font-weight:500;border:none;background:transparent;color:var(--text3);cursor:pointer;transition:all 0.2s;}
+.len-btn.on{background:var(--pink-blush);color:var(--pink);}
 
 /* VOICE PICKER */
 .voice-section{margin:1.2rem 0;}
@@ -265,6 +268,10 @@ body{font-family:'DM Sans',sans-serif;background:var(--cream);color:var(--text1)
       <div class="input-modes">
         <button class="mode-btn on" id="modeContent" onclick="setMode('content')">📋 content / url</button>
         <button class="mode-btn" id="modeThought" onclick="setMode('thought')">💭 i have a thought</button>
+      </div>
+      <div class="input-modes" style="margin-top:-4px">
+        <button class="mode-btn on" id="lenShort" onclick="setLen('short')">short (3–5 lines)</button>
+        <button class="mode-btn" id="lenLong" onclick="setLen('long')">long (6–9 lines, story)</button>
       </div>
       <textarea class="main-input" id="mainInput" oninput="updateChar()" placeholder="paste anything here — a linkedin post you saw, a headline, a url, a vibe, a half-formed rant..."></textarea>
       <div class="input-footer">
@@ -464,6 +471,11 @@ function setMode(m){
     ? 'drop the thought. unfiltered. raw. that\'s the point...'
     : 'paste anything — a post you saw, a headline, a url, a vibe, a half-formed idea...';
 }
+function setLen(l){
+  postLength=l;
+  document.getElementById('lenShort').classList.toggle('on',l==='short');
+  document.getElementById('lenLong').classList.toggle('on',l==='long');
+}
 
 // ── RATING CONTEXT ────────────────────────────────────────────────
 function ratingCtx(vid){
@@ -497,7 +509,7 @@ Write ONLY the post. No preamble. No "here's your post:". Just the post. 3-9 lin
 
 ${inputLine}
 
-Write ONLY the post. No preamble. Just the post.`;
+Write ONLY the post. No preamble. ${postLength==='short'?'Keep it punchy, 3-5 lines':'Go longer, 6-9 lines with full narrative arc'}. Just the post.`;
   }
 
   if(voiceDef){
@@ -559,7 +571,7 @@ async function generate(){
 
     try {
       const prompt = buildPrompt(p.voiceId, input, isThought);
-      const raw = (await callAI(prompt, 600)) || 'could not generate this voice.';
+      const raw = (await callAI(prompt, 1200)) || 'could not generate this voice.';
       currentPosts[i].text = raw;
       currentPosts[i].status = 'done';
     } catch(e){
@@ -822,7 +834,7 @@ async function runAnalysis(){
     const prompt=`Analyse these ${samples.length} writing samples from "${name}" and extract a precise voice DNA in 4-6 sentences. Be specific not generic. Cover: sentence length/rhythm, capitalisation habits, emotional register/tone, signature opening moves, signature closing moves, what this voice would NEVER do, and any distinctive patterns or recurring devices.\n\nSamples:\n${samples.map((s,i)=>`[${i+1}] ${s}`).join('\n\n')}`;
 
     if(analysisAbort){ clearInterval(progInterval); return; }
-    const dna = (await callAI(prompt, 400)) || 'could not extract dna.';
+    const dna = (await callAI(prompt, 800)) || 'could not extract dna.';
     pendingDna=dna;
 
     clearInterval(progInterval);
