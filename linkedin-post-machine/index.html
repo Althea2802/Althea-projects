@@ -945,11 +945,23 @@ function switchView(name,btn){
 })();
 
 // ── INIT ──────────────────────────────────────────────────────────
-document.addEventListener('DOMContentLoaded', function(){
-  renderVoicePills();
-  renderTopics();
-  renderHistory();
-});
+function init(){
+  try {
+    renderVoicePills();
+  } catch(e){ console.error('renderVoicePills failed:',e); }
+  try {
+    renderTopics();
+  } catch(e){ console.error('renderTopics failed:',e); }
+  try {
+    renderHistory();
+  } catch(e){ console.error('renderHistory failed:',e); }
+}
+
+if(document.readyState === 'loading'){
+  document.addEventListener('DOMContentLoaded', init);
+} else {
+  init();
+}
 </script>
 </body>
 </html>
