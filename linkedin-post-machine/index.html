@@ -535,7 +535,7 @@ function buildPrompt(vid, input, isThought){
 // ── GENERATE ─────────────────────────────────────────────────────
 
 async function callAI(prompt, maxTokens) {
-  const res = await fetch('/api/claude', {
+  const res = await fetch('/api', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ prompt: prompt, max_tokens: maxTokens || 1200 })
