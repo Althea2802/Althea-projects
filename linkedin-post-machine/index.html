@@ -310,6 +310,9 @@ body.cursor-active * { cursor: none !important; }
           </div>
         </div>
         <div id="cardContainer"></div>
+        <div style="text-align:center;margin-top:1.2rem;display:none" id="newGenWrap">
+          <button class="generate-btn" style="width:auto;padding:0.55rem 2rem;background:transparent;border:1.5px solid var(--pink);color:var(--pink);" onclick="newGenerate()">✦ new generate</button>
+        </div>
       </div>
     </div>
 
@@ -487,9 +490,14 @@ function ratingCtx(vid){
   const r = S.ratings[vid]||[];
   if(!r.length) return '';
   const avg = (r.reduce((a,b)=>a+b,0)/r.length).toFixed(1);
-  const last5 = r.slice(-5);
-  const hi = r.filter(x=>x>=4).length, lo = r.filter(x=>x<=2).length;
-  return `\n\nRating context for this voice: avg ${avg}/5 across ${r.length} posts. Last 5: [${last5.join(',')}]. High ratings(4-5): ${hi}, low ratings(1-2): ${lo}. Calibrate toward what earns higher ratings.`;
+  const hi = r.filter(x=>x.score>=4), lo = r.filter(x=>x.score<=2);
+  const hiSamples = hi.slice(-3).map(x=>'['+x.score+'/5] '+x.text.slice(0,80)).join(' | ');
+  const loSamples = lo.slice(-3).map(x=>'['+x.score+'/5] '+x.text.slice(0,80)).join(' | ');
+  let ctx = '\n\nRating history for this voice (avg '+avg+'/5 across '+r.length+' posts):';
+  if(hiSamples) ctx += '\nHigh-rated examples (write MORE like these): '+hiSamples;
+  if(loSamples) ctx += '\nLow-rated examples (write LESS like these): '+loSamples;
+  ctx += '\nCalibrate your next post toward the high-rated style.';
+  return ctx;
 }
 
 // ── VOICE PROMPTS ─────────────────────────────────────────────────
@@ -499,8 +507,8 @@ function buildPrompt(vid, input, isThought){
   const rc = ratingCtx(vid);
   const isLong = postLength === 'long';
   const lenInstr = isLong
-    ? 'Write 6-9 lines. Build a narrative arc. Give it room to breathe. Story first, insight lands at the end.'
-    : 'Write 3-5 lines. Tight, punchy, no fluff.';
+    ? 'LENGTH REQUIREMENT: Write EXACTLY 6-9 lines minimum. This is a long-form post. Build a full narrative arc — start with a hook, develop the story or observation with specific detail, land the insight at the end. Do NOT write a short post. If you write fewer than 6 lines you have failed the instruction.'
+    : 'LENGTH REQUIREMENT: Write 3-5 lines maximum. Short, punchy, no fluff. Every word earns its place.';
   const inputLine = isThought
     ? 'Raw intrusive thought — preserve the raw energy, shape it shareable:\n"' + input + '"'
     : 'Source material:\n"' + input + '"';
@@ -510,7 +518,12 @@ function buildPrompt(vid, input, isThought){
   }
 
   if(vid==='wildcard'){
-    return 'You are the WILDCARD voice. Pick ONE unexpected creative angle — nature documentary voiceover, ancient philosopher on modern linkedin, product recall notice, horoscope reading, villain origin story, out-of-office from 2045, academic abstract, warning label, stage direction. Commit fully. Keep the core insight. State angle in brackets at top: [voice: ...].\n' + rc + '\n\n' + inputLine + '\n\n' + lenInstr + ' Write ONLY the post. No preamble.';
+    // blend all stored voice DNAs for the wildcard
+    const customDNAs = S.tones.map(t=>t.name+': '+t.dna.slice(0,80)).join(' | ');
+    const blendContext = customDNAs
+      ? 'You have access to these voice styles in this person\'s library: '+customDNAs+'. Blend 2-3 of them unexpectedly.'
+      : 'Blend elements of kartik (deadpan, lowercase, devastating closer) and soumya (loud, hinglish, punchy) in an unexpected way.';
+    return 'You are the WILDCARD — an unexpected mashup of the voices this person actually uses. '+blendContext+' The result should feel like a fresh perspective that sounds human and specific, not like an AI doing a "creative exercise". No warning labels. No nature documentaries. No corporate satire formats. Just a genuinely surprising angle on the topic that still sounds like a real person wrote it. Lowercase preferred. Short sharp sentences OR a flowing story — pick whichever fits the topic.\n' + rc + '\n\n' + inputLine + '\n\n' + lenInstr + ' Write ONLY the post. No preamble. No brackets. No meta-commentary.';
   }
 
   if(vid==='kartik'){
@@ -538,7 +551,7 @@ async function callAI(prompt, maxTokens) {
   const res = await fetch('/api', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ prompt: prompt, max_tokens: maxTokens || 1200 })
+    body: JSON.stringify({ prompt: prompt, max_tokens: maxTokens || 1600 })
   });
   const raw = await res.text();
   let d;
@@ -546,6 +559,15 @@ async function callAI(prompt, maxTokens) {
   if (d.error) throw new Error(d.error);
   if (!d.text) throw new Error('no text in response. full response: ' + JSON.stringify(d).slice(0,300));
   return d.text;
+}
+
+function newGenerate(){
+  document.getElementById('outputWrap').style.display='none';
+  document.getElementById('newGenWrap').style.display='none';
+  document.getElementById('mainInput').value='';
+  document.getElementById('mainInput').focus();
+  currentPosts=[];
+  currentIdx=0;
 }
 
 async function generate(){
@@ -580,7 +602,7 @@ async function generate(){
 
     try {
       const prompt = buildPrompt(p.voiceId, input, isThought);
-      const raw = (await callAI(prompt, 1200)) || 'could not generate this voice.';
+      const raw = (await callAI(prompt, postLength==='long'?1800:900)) || 'could not generate this voice.';
       currentPosts[i].text = raw;
       currentPosts[i].status = 'done';
     } catch(e){
@@ -592,12 +614,13 @@ async function generate(){
     renderNav();
 
     // small breath between calls
-    if(i<currentPosts.length-1) await sleep(300);
+    if(i<currentPosts.length-1) await sleep(2500);
   }
 
   setProgress(100,'done ✦');
   setTimeout(()=>{ document.getElementById('progressWrap').style.display='none'; },1200);
   document.getElementById('genBtn').disabled=false;
+  document.getElementById('newGenWrap').style.display='block';
 
   // save to history
   S.history.unshift({
@@ -685,15 +708,17 @@ function nextCard(){ if(currentIdx<currentPosts.length-1){ currentIdx++; renderC
 function prevCard(){ if(currentIdx>0){ currentIdx--; renderCard(currentIdx); renderNav(); } }
 
 // ── RATE ──────────────────────────────────────────────────────────
-function lastRating(vid){ const r=S.ratings[vid]||[]; return r.length?r[r.length-1]:0; }
+function lastRating(vid){ const r=S.ratings[vid]||[]; if(!r.length)return 0; const last=r[r.length-1]; return typeof last==='object'?last.score:last; }
 function rate(vid,n){
   if(!S.ratings[vid]) S.ratings[vid]=[];
-  S.ratings[vid].push(n);
-  if(S.ratings[vid].length>100) S.ratings[vid]=S.ratings[vid].slice(-100);
+  const ptEl=document.getElementById('pt-'+vid);
+  const postText=ptEl?ptEl.innerText.trim().slice(0,150):'';
+  S.ratings[vid].push({score:n,text:postText});
+  if(S.ratings[vid].length>50) S.ratings[vid]=S.ratings[vid].slice(-50);
   save();
-  document.querySelectorAll(`#stars-${vid} .star`).forEach((s,i)=>s.classList.toggle('on',i<n));
-  const el=document.getElementById(`rtxt-${vid}`);
-  if(el) el.textContent=`rated ${n}/5 ✦`;
+  document.querySelectorAll('#stars-'+vid+' .star').forEach((s,i)=>s.classList.toggle('on',i<n));
+  const el=document.getElementById('rtxt-'+vid);
+  if(el) el.textContent='rated '+n+'/5 ✦';
 }
 
 // ── COPY ──────────────────────────────────────────────────────────
@@ -731,9 +756,12 @@ function loadHist(i){
 function renderTones(){
   const grid=document.getElementById('toneGrid');
   const all=[...BUILTIN,...S.tones];
-  grid.innerHTML=all.map(t=>`
+  grid.innerHTML=all.map((t,i)=>`
     <div class="tone-card">
-      <div class="tone-name">${t.name}${t.builtin?` <span class="tone-builtin-tag">(built-in)</span>`:''}</div>
+      <div class="tone-name" style="display:flex;align-items:center;justify-content:space-between">
+        <span>${t.name}${t.builtin?' <span class="tone-builtin-tag">(built-in)</span>':''}</span>
+        ${!t.builtin?`<button onclick="editTone('${t.id}')" style="background:none;border:none;font-size:0.72rem;color:var(--text3);cursor:pointer;font-family:var(--font-sans)">edit</button>`:''}
+      </div>
       <div class="tone-dna">${t.dna.slice(0,130)}${t.dna.length>130?'...':''}</div>
     </div>`).join('');
 }
@@ -742,6 +770,20 @@ function renderTones(){
 let sampleCount = 1;
 let savedSamples = [];
 let analysisAbort = false;
+
+function editTone(id){
+  const t=S.tones.find(x=>x.id===id);
+  if(!t) return;
+  openToneModal();
+  document.getElementById('t-name').value=t.name;
+  // pre-fill existing dna as first sample for re-analysis
+  savedSamples=[t.dna];
+  sampleCount=2;
+  buildSampleBoxes();
+  // mark as editing
+  pendingToneName=t.name;
+  document.getElementById('toneModal')._editId=id;
+}
 
 function openToneModal(){
   document.getElementById('toneModal').classList.add('open');
@@ -882,12 +924,20 @@ function rejectAnalysis(){
 
 function saveTone(){
   if(!pendingDna||!pendingToneName) return;
-  const newT={id:'custom_'+Date.now(),name:pendingToneName,dna:pendingDna,builtin:false};
-  S.tones.push(newT);
-  if(!S.ratings[newT.id]) S.ratings[newT.id]=[];
+  const modal=document.getElementById('toneModal');
+  const editId=modal._editId||null;
+  if(editId){
+    const t=S.tones.find(x=>x.id===editId);
+    if(t){ t.name=pendingToneName; t.dna=pendingDna; }
+    modal._editId=null;
+  } else {
+    const newT={id:'custom_'+Date.now(),name:pendingToneName,dna:pendingDna,builtin:false};
+    S.tones.push(newT);
+    if(!S.ratings[newT.id]) S.ratings[newT.id]=[];
+    selectedVoices.push(newT.id);
+    if(selectedVoices.length>3) selectedVoices=selectedVoices.slice(-3);
+  }
   save();
-  selectedVoices.push(newT.id);
-  if(selectedVoices.length>3) selectedVoices=selectedVoices.slice(-3);
   renderVoicePills();
   renderTones();
   closeToneModal();
