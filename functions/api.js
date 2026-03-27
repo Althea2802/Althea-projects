@@ -2,7 +2,7 @@ export async function onRequestPost(context) {
   try {
     const body = await context.request.json();
     const prompt = body.prompt || '';
-    const maxTokens = body.max_tokens || 1200;
+    const maxTokens = body.max_tokens || 1800;
 
     const geminiBody = {
       contents: [{ parts: [{ text: prompt }] }],
