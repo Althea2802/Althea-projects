@@ -506,7 +506,7 @@ function buildPrompt(vid, input, isThought){
     : 'Source material:\n"' + input + '"';
 
   if(vid==='althea'){
-    return 'You are writing in ALTHEA's voice — the user's own voice, nail it. Style DNA: playful, self-aware, slightly chaotic. warm but not soft. slightly cynical. genuinely funny and observational. always lowercase. no emojis unless they EARN it. NEVER engagement bait. psychology as a lived lens. emotional storytelling via real moments not speeches. dialogue used sparingly. never sounds like a linkedin person trying not to sound like one. irony is effortless not performed.\n' + rc + '\n\n' + inputLine + '\n\n' + lenInstr + ' Write ONLY the post. No preamble. No hashtags. Lowercase.';
+    return 'You are writing in ALTHEA\'s voice — the user\'s own voice, nail it. Style DNA: playful, self-aware, slightly chaotic. warm but not soft. slightly cynical. genuinely funny and observational. always lowercase. no emojis unless they EARN it. NEVER engagement bait. psychology as a lived lens. emotional storytelling via real moments not speeches. dialogue used sparingly. never sounds like a linkedin person trying not to sound like one. irony is effortless not performed.\n' + rc + '\n\n' + inputLine + '\n\n' + lenInstr + ' Write ONLY the post. No preamble. No hashtags. Lowercase.';
   }
 
   if(vid==='wildcard'){
@@ -514,19 +514,19 @@ function buildPrompt(vid, input, isThought){
   }
 
   if(vid==='kartik'){
-    return 'You are writing in KARTIK's voice. Style DNA: deadpan precision. always lowercase. builds slowly with short punchy lines then ONE devastating closer that reframes everything. self-aware about hustle culture absurdity. never explains the joke. the last line does ALL the work. no emojis. no hashtags.\n' + rc + '\n\n' + inputLine + '\n\n' + lenInstr + ' Write ONLY the post. No preamble. Lowercase. No hashtags.';
+    return 'You are writing in KARTIK\'s voice. Style DNA: deadpan precision. always lowercase. builds slowly with short punchy lines then ONE devastating closer that reframes everything. self-aware about hustle culture absurdity. never explains the joke. the last line does ALL the work. no emojis. no hashtags.\n' + rc + '\n\n' + inputLine + '\n\n' + lenInstr + ' Write ONLY the post. No preamble. Lowercase. No hashtags.';
   }
 
   if(vid==='soumya'){
-    return 'You are writing in SOUMYA's voice. Style DNA: loud and unapologetic. hinglish code-switching when emotion demands it (yaar, woh wali feeling, sach bol rahi hoon). bold opinions stated as facts. uses ALL CAPS for drama and emphasis. repeats a word or phrase for rhythm. ends on a punch or mic drop. NEVER wishy-washy. feminist undercurrent baked into humour not stated separately.\n' + rc + '\n\n' + inputLine + '\n\n' + lenInstr + ' Write ONLY the post. No preamble. No hashtags.';
+    return 'You are writing in SOUMYA\'s voice. Style DNA: loud and unapologetic. hinglish code-switching when emotion demands it (yaar, woh wali feeling, sach bol rahi hoon). bold opinions stated as facts. uses ALL CAPS for drama and emphasis. repeats a word or phrase for rhythm. ends on a punch or mic drop. NEVER wishy-washy. feminist undercurrent baked into humour not stated separately.\n' + rc + '\n\n' + inputLine + '\n\n' + lenInstr + ' Write ONLY the post. No preamble. No hashtags.';
   }
 
   if(vid==='kelly'){
-    return 'You are writing in KELLY JONES's voice (the perception strategist from Fly Me to the Moon). Style DNA: reads rooms instinctively. credibility without institutional backing — authority from precision not credentials. speaks in outcomes not processes. direct never cold. three moves ahead. the confidence of someone who knows exactly what they bring. no filler, no hedging. every line earns its place.\n' + rc + '\n\n' + inputLine + '\n\n' + lenInstr + ' Write ONLY the post. No preamble. No hashtags.';
+    return 'You are writing in KELLY JONES\'s voice (the perception strategist from Fly Me to the Moon). Style DNA: reads rooms instinctively. credibility without institutional backing — authority from precision not credentials. speaks in outcomes not processes. direct never cold. three moves ahead. the confidence of someone who knows exactly what they bring. no filler, no hedging. every line earns its place.\n' + rc + '\n\n' + inputLine + '\n\n' + lenInstr + ' Write ONLY the post. No preamble. No hashtags.';
   }
 
   if(voiceDef){
-    return 'You are writing in ' + voiceDef.name + ''s voice.\nStyle DNA: ' + voiceDef.dna + '\n' + rc + '\n\n' + inputLine + '\n\n' + lenInstr + ' Write ONLY the post. No preamble. No hashtags.';
+    return 'You are writing in ' + voiceDef.name + '\'s voice.\nStyle DNA: ' + voiceDef.dna + '\n' + rc + '\n\n' + inputLine + '\n\n' + lenInstr + ' Write ONLY the post. No preamble. No hashtags.';
   }
 
   return 'Write a LinkedIn post about: "' + input + '". ' + lenInstr;
