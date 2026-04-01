@@ -1,0 +1,1375 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Althea's Constellation</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;1,400;1,500&family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --void: #0a0614;
+  --deep: #110a22;
+  --mid: #1a1035;
+  --fog: rgba(180,140,255,0.06);
+  --star-core: #fff8ff;
+  --fairy: #c084fc;
+  --fairy-lt: #e9d5ff;
+  --fairy-dim: #7c3aed;
+  --rose: #f472b6;
+  --rose-lt: #fbcfe8;
+  --gold: #fbbf24;
+  --silver: #e2e8f0;
+  --aqua: #67e8f9;
+  --mint: #a7f3d0;
+  --text-bright: #f5f0ff;
+  --text-mid: #c4b5fd;
+  --text-dim: #7c6a9a;
+
+  --theme-mindset: #fbbf24;
+  --theme-love: #f472b6;
+  --theme-career: #e2e8f0;
+  --theme-spirit: #c084fc;
+  --theme-self: #fb923c;
+  --theme-life: #a7f3d0;
+  --theme-other: #67e8f9;
+}
+
+* { margin:0; padding:0; box-sizing:border-box; }
+html, body { width:100%; height:100%; overflow:hidden; }
+body {
+  font-family: 'DM Sans', sans-serif;
+  background: var(--void);
+  color: var(--text-bright);
+  user-select: none;
+}
+
+/* ── SKY LAYERS ── */
+#sky {
+  position: fixed; inset: 0;
+  background: radial-gradient(ellipse 120% 80% at 30% 20%, #1e0a3c 0%, #0a0614 55%),
+              radial-gradient(ellipse 80% 60% at 80% 80%, #0f0830 0%, transparent 60%);
+}
+#fog-layer {
+  position: fixed; inset: 0; pointer-events: none; z-index: 1;
+  background:
+    radial-gradient(ellipse 60% 30% at 20% 60%, rgba(140,80,255,0.08) 0%, transparent 70%),
+    radial-gradient(ellipse 50% 40% at 75% 25%, rgba(200,120,255,0.06) 0%, transparent 60%),
+    radial-gradient(ellipse 40% 50% at 50% 85%, rgba(100,60,200,0.07) 0%, transparent 70%);
+  animation: fogDrift 18s ease-in-out infinite alternate;
+}
+@keyframes fogDrift {
+  0% { opacity:0.6; transform: translate(0,0) scale(1); }
+  100% { opacity:1; transform: translate(12px, -8px) scale(1.02); }
+}
+
+/* ambient sparkle particles */
+#particles { position:fixed; inset:0; pointer-events:none; z-index:2; overflow:hidden; }
+.particle {
+  position:absolute; border-radius:50%;
+  background: radial-gradient(circle, rgba(255,255,255,0.9), rgba(192,132,252,0.3));
+  animation: particleFloat linear infinite;
+}
+@keyframes particleFloat {
+  0% { transform:translateY(100vh) translateX(0) scale(0); opacity:0; }
+  10% { opacity:1; transform:translateY(85vh) translateX(5px) scale(1); }
+  90% { opacity:0.5; }
+  100% { transform:translateY(-5vh) translateX(-10px) scale(0.3); opacity:0; }
+}
+
+/* ── CANVAS ── */
+#canvas-wrap {
+  position:fixed; inset:0; z-index:3;
+  overflow:hidden;
+}
+#canvas {
+  position:absolute;
+  width:3000px; height:3000px;
+  top:50%; left:50%;
+  transform-origin: center center;
+}
+#svg-lines {
+  position:absolute; inset:0; width:100%; height:100%;
+  pointer-events:none;
+}
+
+/* ── STAR QUOTES ── */
+.star-node {
+  position:absolute;
+  cursor:pointer;
+  transform:translate(-50%,-50%);
+  transition: transform 0.3s cubic-bezier(0.34,1.56,0.64,1);
+}
+.star-node:hover { transform:translate(-50%,-50%) scale(1.35); }
+.star-node:hover .star-orb { filter: brightness(1.6) saturate(1.4); }
+
+.star-orb {
+  border-radius:50%;
+  position:relative;
+  transition: filter 0.3s;
+}
+.star-orb::before {
+  content:'';
+  position:absolute; inset:-40%; border-radius:50%;
+  background: radial-gradient(circle, var(--glow-col, rgba(192,132,252,0.2)) 0%, transparent 70%);
+  animation: starPulse 3s ease-in-out infinite;
+}
+.star-orb::after {
+  content:'';
+  position:absolute; inset:15%; border-radius:50%;
+  background: radial-gradient(circle at 35% 35%, rgba(255,255,255,0.9), transparent 60%);
+}
+@keyframes starPulse {
+  0%,100% { transform:scale(1); opacity:0.6; }
+  50% { transform:scale(1.4); opacity:1; }
+}
+.star-label {
+  position:absolute;
+  top:calc(100% + 8px);
+  left:50%; transform:translateX(-50%);
+  font-family:'Cormorant Garamond',serif;
+  font-size:13px; font-style:italic;
+  color:var(--text-mid);
+  white-space:nowrap;
+  max-width:140px; overflow:hidden;
+  text-overflow:ellipsis;
+  text-align:center;
+  pointer-events:none;
+  text-shadow: 0 0 12px rgba(192,132,252,0.5);
+}
+
+/* ── DECORATIVE ELEMENTS ── */
+.deco-wing {
+  position:fixed; pointer-events:none; z-index:2; opacity:0.18;
+  filter: drop-shadow(0 0 20px rgba(192,132,252,0.4));
+}
+.deco-wing.tl { top:-20px; left:-20px; transform:rotate(30deg); }
+.deco-wing.br { bottom:-20px; right:-20px; transform:rotate(210deg); }
+
+/* ── UI CHROME ── */
+#ui-overlay { position:fixed; inset:0; z-index:10; pointer-events:none; }
+
+/* Header */
+#header {
+  position:fixed; top:0; left:0; right:0; z-index:20;
+  display:flex; align-items:center; justify-content:space-between;
+  padding:20px 28px;
+  pointer-events:all;
+}
+.logo-text {
+  font-family:'Playfair Display',serif;
+  font-size:22px; font-weight:400;
+  color:var(--text-bright);
+  letter-spacing:-0.01em;
+}
+.logo-text em { font-style:italic; color:var(--fairy); }
+.logo-sub {
+  font-family:'Cormorant Garamond',serif;
+  font-style:italic; font-size:13px;
+  color:var(--text-dim); margin-top:1px;
+}
+.header-actions { display:flex; gap:10px; align-items:center; }
+.hbtn {
+  padding:7px 16px; border-radius:20px;
+  font-family:'DM Sans',sans-serif; font-size:13px; font-weight:500;
+  border:1px solid rgba(192,132,252,0.3);
+  background:rgba(26,16,53,0.7); color:var(--text-mid);
+  cursor:pointer; backdrop-filter:blur(8px);
+  transition:all 0.2s;
+}
+.hbtn:hover { border-color:var(--fairy); color:var(--fairy-lt); }
+.hbtn.primary { background:var(--fairy-dim); border-color:var(--fairy); color:white; }
+.hbtn.primary:hover { background:var(--fairy); }
+
+/* Search */
+#search-bar {
+  position:fixed; top:22px; left:50%; transform:translateX(-50%);
+  z-index:20; pointer-events:all;
+  display:flex; align-items:center; gap:8px;
+  background:rgba(26,16,53,0.8); backdrop-filter:blur(12px);
+  border:1px solid rgba(192,132,252,0.25); border-radius:30px;
+  padding:8px 18px;
+  transition: border-color 0.2s;
+}
+#search-bar:focus-within { border-color:var(--fairy); }
+#search-input {
+  background:none; border:none; outline:none;
+  font-family:'Cormorant Garamond',serif; font-style:italic;
+  font-size:16px; color:var(--text-bright); width:220px;
+}
+#search-input::placeholder { color:var(--text-dim); }
+.search-icon { font-size:14px; color:var(--text-dim); }
+
+/* Theme filter pills */
+#theme-pills {
+  position:fixed; bottom:28px; left:50%; transform:translateX(-50%);
+  z-index:20; pointer-events:all;
+  display:flex; gap:8px; flex-wrap:wrap; justify-content:center;
+  max-width:700px;
+}
+.theme-pill {
+  padding:5px 14px; border-radius:20px;
+  font-family:'DM Sans',sans-serif; font-size:12px; font-weight:500;
+  border:1px solid; cursor:pointer;
+  backdrop-filter:blur(8px);
+  transition:all 0.25s; letter-spacing:0.03em;
+  background:rgba(10,6,20,0.6);
+}
+.theme-pill.active { color:var(--void) !important; }
+
+/* ── MANDALA PANEL ── */
+#mandala-panel {
+  position:fixed; right:24px; top:50%; transform:translateY(-50%);
+  z-index:20; pointer-events:all;
+  width:180px;
+  display:flex; flex-direction:column; align-items:center; gap:12px;
+}
+#mandala-canvas {
+  width:160px; height:160px;
+  filter: drop-shadow(0 0 20px rgba(192,132,252,0.4));
+}
+.mandala-label {
+  font-family:'Cormorant Garamond',serif;
+  font-style:italic; font-size:13px;
+  color:var(--text-dim); text-align:center;
+}
+.mandala-title {
+  font-family:'Playfair Display',serif;
+  font-size:14px; color:var(--text-mid);
+  text-align:center;
+}
+
+/* ── ADD QUOTE PANEL ── */
+#add-panel {
+  position:fixed; left:24px; top:50%; transform:translateY(-50%);
+  z-index:20; pointer-events:all;
+  width:230px;
+  background:rgba(17,10,34,0.85); backdrop-filter:blur(16px);
+  border:1px solid rgba(192,132,252,0.2); border-radius:16px;
+  padding:20px;
+}
+.panel-title {
+  font-family:'Playfair Display',serif;
+  font-size:16px; color:var(--text-bright);
+  margin-bottom:4px;
+}
+.panel-sub {
+  font-family:'Cormorant Garamond',serif;
+  font-style:italic; font-size:13px;
+  color:var(--text-dim); margin-bottom:14px;
+}
+.field-label {
+  font-size:11px; font-weight:500;
+  text-transform:uppercase; letter-spacing:0.07em;
+  color:var(--text-dim); margin-bottom:5px;
+  display:block;
+}
+.field-textarea {
+  width:100%; min-height:90px; resize:none;
+  background:rgba(10,6,20,0.6); border:1px solid rgba(192,132,252,0.2);
+  border-radius:8px; padding:10px 12px;
+  font-family:'Cormorant Garamond',serif; font-style:italic;
+  font-size:15px; color:var(--text-bright); outline:none;
+  transition:border-color 0.2s; line-height:1.6; margin-bottom:10px;
+}
+.field-textarea:focus { border-color:var(--fairy); }
+.field-textarea::placeholder { color:var(--text-dim); }
+.theme-select {
+  width:100%; padding:8px 12px;
+  background:rgba(10,6,20,0.6); border:1px solid rgba(192,132,252,0.2);
+  border-radius:8px; color:var(--text-bright);
+  font-family:'DM Sans',sans-serif; font-size:13px;
+  outline:none; margin-bottom:12px; cursor:pointer;
+}
+.theme-select option { background:#1a1035; }
+.suggest-tag {
+  display:inline-block; padding:3px 10px; border-radius:12px;
+  font-size:11px; margin-bottom:10px;
+  background:rgba(192,132,252,0.15); border:1px solid rgba(192,132,252,0.3);
+  color:var(--fairy-lt); cursor:pointer;
+}
+.add-btn {
+  width:100%; padding:10px;
+  background: linear-gradient(135deg, var(--fairy-dim), #9333ea);
+  border:none; border-radius:10px;
+  font-family:'DM Sans',sans-serif; font-weight:500; font-size:14px;
+  color:white; cursor:pointer;
+  box-shadow: 0 4px 20px rgba(124,58,237,0.4);
+  transition:all 0.2s;
+}
+.add-btn:hover { transform:translateY(-1px); box-shadow:0 6px 25px rgba(124,58,237,0.5); }
+
+/* count */
+#quote-count {
+  font-family:'Cormorant Garamond',serif; font-style:italic;
+  font-size:12px; color:var(--text-dim); text-align:center;
+  margin-top:8px;
+}
+
+/* ── QUOTE FULLSCREEN ── */
+#quote-view {
+  position:fixed; inset:0; z-index:50;
+  display:none; align-items:center; justify-content:center;
+  background:rgba(10,6,20,0.85); backdrop-filter:blur(16px);
+}
+#quote-view.open { display:flex; animation:viewIn 0.4s ease; }
+@keyframes viewIn { from{opacity:0;} to{opacity:1;} }
+.quote-card {
+  max-width:680px; width:90%;
+  background:rgba(26,16,53,0.9);
+  border:1px solid rgba(192,132,252,0.35);
+  border-radius:24px; padding:48px 52px;
+  position:relative;
+  box-shadow: 0 0 80px rgba(192,132,252,0.15), inset 0 1px 0 rgba(255,255,255,0.08);
+  animation:cardRise 0.4s cubic-bezier(0.34,1.56,0.64,1);
+}
+@keyframes cardRise { from{transform:scale(0.85) translateY(20px);} to{transform:scale(1) translateY(0);} }
+.quote-card::before {
+  content:'';
+  position:absolute; inset:-1px; border-radius:24px;
+  background:linear-gradient(135deg, rgba(192,132,252,0.3), transparent 40%, rgba(244,114,182,0.15) 100%);
+  z-index:-1;
+}
+.quote-card-theme {
+  font-size:11px; font-weight:500; text-transform:uppercase;
+  letter-spacing:0.1em; color:var(--text-dim); margin-bottom:24px;
+  display:flex; align-items:center; gap:8px;
+}
+.quote-card-theme::before { content:'✦'; color:var(--fairy); font-size:10px; }
+.quote-card-text {
+  font-family:'Playfair Display',serif;
+  font-size:26px; font-weight:400; line-height:1.65;
+  color:var(--text-bright); margin-bottom:28px;
+  font-style:italic;
+}
+.quote-card-close {
+  position:absolute; top:20px; right:20px;
+  background:rgba(192,132,252,0.15); border:1px solid rgba(192,132,252,0.25);
+  border-radius:50%; width:32px; height:32px;
+  font-size:14px; color:var(--text-dim); cursor:pointer;
+  display:flex; align-items:center; justify-content:center;
+  transition:all 0.2s;
+}
+.quote-card-close:hover { background:rgba(192,132,252,0.3); color:var(--text-bright); }
+.quote-card-delete {
+  padding:5px 14px; border-radius:12px;
+  background:rgba(239,68,68,0.12); border:1px solid rgba(239,68,68,0.25);
+  font-size:12px; color:#fca5a5; cursor:pointer;
+  font-family:'DM Sans',sans-serif;
+  transition:all 0.2s;
+}
+.quote-card-delete:hover { background:rgba(239,68,68,0.25); }
+
+/* empty state */
+#empty-state {
+  position:fixed; top:50%; left:50%; transform:translate(-50%,-50%);
+  z-index:5; text-align:center; pointer-events:none;
+}
+.empty-title {
+  font-family:'Playfair Display',serif; font-style:italic;
+  font-size:28px; color:var(--text-dim); margin-bottom:10px;
+}
+.empty-sub {
+  font-family:'Cormorant Garamond',serif; font-style:italic;
+  font-size:16px; color:rgba(124,102,154,0.6);
+}
+
+/* ── PURPLE WAND CURSOR ── */
+* { cursor: none !important; }
+#wand-cursor {
+  position:fixed; pointer-events:none; z-index:99999;
+  width:28px; height:34px; display:none;
+}
+.fairy-dust {
+  position:fixed; pointer-events:none; z-index:99998;
+  border-radius:50%; animation:dustFade 0.8s forwards;
+}
+@keyframes dustFade {
+  0%{ opacity:1; transform:scale(1) translate(0,0); }
+  100%{ opacity:0; transform:scale(0) translate(var(--dx),var(--dy)); }
+}
+
+/* ── ZOOM CONTROLS ── */
+#zoom-controls {
+  position:fixed; bottom:70px; right:24px; z-index:20;
+  display:flex; flex-direction:column; gap:6px;
+}
+.zoom-btn {
+  width:34px; height:34px; border-radius:50%;
+  background:rgba(26,16,53,0.8); backdrop-filter:blur(8px);
+  border:1px solid rgba(192,132,252,0.25);
+  color:var(--text-mid); font-size:16px; cursor:pointer;
+  display:flex; align-items:center; justify-content:center;
+  transition:all 0.2s;
+}
+.zoom-btn:hover { border-color:var(--fairy); color:var(--fairy-lt); }
+
+/* ── FAIRY ── */
+#fairy-wrap {
+  position: fixed; pointer-events: none; z-index: 9000;
+  width: 46px; height: 58px;
+  transform: translate(-50%, -50%);
+  will-change: transform;
+  transition: filter 0.35s;
+}
+#fairy-svg {
+  width: 100%; height: 100%;
+  filter: drop-shadow(0 0 6px rgba(255,180,220,0.9)) drop-shadow(0 0 12px rgba(249,168,212,0.5));
+  transition: filter 0.35s;
+}
+#fairy-wrap.chasing #fairy-svg {
+  filter: drop-shadow(0 0 8px rgba(255,215,0,1)) drop-shadow(0 0 16px rgba(253,230,138,0.7));
+}
+#fairy-wrap.dancing #fairy-svg {
+  filter: drop-shadow(0 0 10px rgba(255,160,200,1)) drop-shadow(0 0 20px rgba(244,114,182,0.8));
+  animation: fairyDance 0.35s ease-in-out infinite alternate;
+}
+#fairy-wrap.sleeping #fairy-svg {
+  filter: drop-shadow(0 0 4px rgba(200,150,255,0.5));
+  opacity: 0.6;
+}
+@keyframes fairyDance {
+  0%   { transform: rotate(-10deg) translateY(0px) scale(1.06); }
+  100% { transform: rotate(10deg)  translateY(-3px) scale(1.06); }
+}
+.fairy-zzz {
+  position: fixed; pointer-events: none; z-index: 9001;
+  font-size: 14px; color: #e9d5ff;
+  font-family: 'Cormorant Garamond', serif;
+  text-shadow: 0 0 8px rgba(192,132,252,0.8);
+  animation: zzzFloat 2s ease-in-out forwards;
+}
+@keyframes zzzFloat {
+  0%   { opacity:0; transform:translateY(0) scale(0.8); }
+  20%  { opacity:1; }
+  100% { opacity:0; transform:translateY(-28px) scale(1.1); }
+}
+.fairy-thought {
+  position:fixed; pointer-events:none; z-index:9001;
+  font-size:16px; color:#fde68a;
+  text-shadow:0 0 8px rgba(251,191,36,0.9);
+  animation:thoughtPop 2s ease-out forwards;
+}
+@keyframes thoughtPop {
+  0%   { opacity:0; transform:scale(0.5) translateY(0); }
+  20%  { opacity:1; transform:scale(1.2) translateY(-4px); }
+  80%  { opacity:0.8; }
+  100% { opacity:0; transform:scale(1) translateY(-18px); }
+}
+.fairy-dust-trail {
+  position:fixed; pointer-events:none; z-index:8999;
+  border-radius:50%;
+  animation:trailFade 1s ease-out forwards;
+}
+@keyframes trailFade {
+  0%   { opacity:0.9; transform:scale(1); }
+  100% { opacity:0; transform:scale(0.2) translate(var(--tdx,0),var(--tdy,0)); }
+}
+</style>
+</head>
+<body>
+
+<div id="sky"></div>
+<div id="fog-layer"></div>
+<div id="particles"></div>
+
+<!-- Decorative wings -->
+<svg class="deco-wing tl" width="200" height="200" viewBox="0 0 200 200">
+  <path d="M100,100 C60,20 10,10 5,60 C0,100 40,110 100,100Z" fill="none" stroke="#c084fc" stroke-width="1.5"/>
+  <path d="M100,100 C140,30 180,5 195,50 C210,95 160,115 100,100Z" fill="none" stroke="#f472b6" stroke-width="1"/>
+  <path d="M100,100 C55,130 20,170 35,185 C55,200 90,165 100,100Z" fill="none" stroke="#c084fc" stroke-width="1.5"/>
+  <path d="M100,100 C145,125 175,160 165,185 C150,205 120,175 100,100Z" fill="none" stroke="#f472b6" stroke-width="1"/>
+  <circle cx="100" cy="100" r="4" fill="#e9d5ff" opacity="0.6"/>
+</svg>
+<svg class="deco-wing br" width="200" height="200" viewBox="0 0 200 200">
+  <path d="M100,100 C60,20 10,10 5,60 C0,100 40,110 100,100Z" fill="none" stroke="#c084fc" stroke-width="1.5"/>
+  <path d="M100,100 C140,30 180,5 195,50 C210,95 160,115 100,100Z" fill="none" stroke="#f472b6" stroke-width="1"/>
+  <path d="M100,100 C55,130 20,170 35,185 C55,200 90,165 100,100Z" fill="none" stroke="#c084fc" stroke-width="1.5"/>
+  <path d="M100,100 C145,125 175,160 165,185 C150,205 120,175 100,100Z" fill="none" stroke="#f472b6" stroke-width="1"/>
+  <circle cx="100" cy="100" r="4" fill="#e9d5ff" opacity="0.6"/>
+</svg>
+
+<!-- Canvas -->
+<div id="canvas-wrap">
+  <div id="canvas">
+    <svg id="svg-lines"></svg>
+  </div>
+</div>
+
+<!-- Empty state -->
+<div id="empty-state">
+  <div class="empty-title">your constellation awaits</div>
+  <div class="empty-sub">add your first quote to light the first star ✦</div>
+</div>
+
+<!-- Header -->
+<div id="header">
+  <div>
+    <div class="logo-text">althea's <em>constellation</em></div>
+    <div class="logo-sub">a living map of what moves you</div>
+  </div>
+  <div class="header-actions">
+    <button class="hbtn" onclick="exportQuotes()">✦ export</button>
+  </div>
+</div>
+
+<!-- Search -->
+<div id="search-bar">
+  <span class="search-icon">✧</span>
+  <input id="search-input" type="text" placeholder="search stars..." oninput="handleSearch()">
+</div>
+
+<!-- Add Quote Panel -->
+<div id="add-panel">
+  <div class="panel-title">add a quote</div>
+  <div class="panel-sub">paste anything that moved you</div>
+  <label class="field-label">the quote</label>
+  <textarea class="field-textarea" id="quote-input" placeholder="paste quote here..." oninput="suggestTheme()"></textarea>
+  <div id="suggest-wrap" style="display:none">
+    <span class="suggest-tag" id="suggest-tag" onclick="acceptSuggest()"></span>
+  </div>
+  <label class="field-label">theme</label>
+  <select class="theme-select" id="theme-select">
+    <option value="mindset">mindset / growth</option>
+    <option value="love">love / relationships</option>
+    <option value="career">career / ambition</option>
+    <option value="spirit">spirituality / universe</option>
+    <option value="self">self / identity</option>
+    <option value="life">life observations / humour</option>
+    <option value="other">other</option>
+  </select>
+  <button class="add-btn" onclick="addQuote()">plant this star ✦</button>
+  <div id="quote-count">0 stars in your sky</div>
+</div>
+
+<!-- Mandala Panel -->
+<div id="mandala-panel">
+  <div class="mandala-title">your current self</div>
+  <canvas id="mandala-canvas" width="160" height="160"></canvas>
+  <div class="mandala-label" id="mandala-label">add quotes to reveal your pattern</div>
+</div>
+
+<!-- Theme pills -->
+<div id="theme-pills">
+  <button class="theme-pill active" data-theme="all" onclick="filterTheme(this,'all')" style="border-color:rgba(192,132,252,0.4);color:var(--fairy-lt)">all stars</button>
+  <button class="theme-pill" data-theme="mindset" onclick="filterTheme(this,'mindset')" style="border-color:var(--theme-mindset);color:var(--theme-mindset)">mindset</button>
+  <button class="theme-pill" data-theme="love" onclick="filterTheme(this,'love')" style="border-color:var(--theme-love);color:var(--theme-love)">love</button>
+  <button class="theme-pill" data-theme="career" onclick="filterTheme(this,'career')" style="border-color:var(--theme-career);color:var(--theme-career)">career</button>
+  <button class="theme-pill" data-theme="spirit" onclick="filterTheme(this,'spirit')" style="border-color:var(--theme-spirit);color:var(--theme-spirit)">spirituality</button>
+  <button class="theme-pill" data-theme="self" onclick="filterTheme(this,'self')" style="border-color:var(--theme-self);color:var(--theme-self)">self</button>
+  <button class="theme-pill" data-theme="life" onclick="filterTheme(this,'life')" style="border-color:var(--theme-life);color:var(--theme-life)">life & humour</button>
+  <button class="theme-pill" data-theme="other" onclick="filterTheme(this,'other')" style="border-color:var(--theme-other);color:var(--theme-other)">other</button>
+</div>
+
+<!-- Zoom controls -->
+<div id="zoom-controls">
+  <button class="zoom-btn" onclick="zoomIn()">+</button>
+  <button class="zoom-btn" onclick="zoomOut()">−</button>
+  <button class="zoom-btn" onclick="resetView()" title="reset view">⊙</button>
+</div>
+
+<!-- Quote fullscreen view -->
+<div id="quote-view" onclick="closeQuoteView(event)">
+  <div class="quote-card" id="quote-card">
+    <button class="quote-card-close" onclick="closeQuoteView()">✕</button>
+    <div class="quote-card-theme" id="qv-theme"></div>
+    <div class="quote-card-text" id="qv-text"></div>
+    <button class="quote-card-delete" id="qv-delete">remove this star</button>
+  </div>
+</div>
+
+<!-- Wand cursor -->
+<svg id="wand-cursor" viewBox="0 0 28 34" fill="none">
+  <line x1="14" y1="30" x2="4" y2="4" stroke="#a855f7" stroke-width="2.5" stroke-linecap="round"/>
+  <circle cx="4" cy="4" r="3.5" fill="#e9d5ff" stroke="#c084fc" stroke-width="1"/>
+  <line x1="4" y1="0.5" x2="4" y2="-2" stroke="#c084fc" stroke-width="1.5" stroke-linecap="round"/>
+  <line x1="1" y1="2" x2="-1.5" y2="1" stroke="#f472b6" stroke-width="1.5" stroke-linecap="round"/>
+  <line x1="7" y1="2" x2="9.5" y2="1" stroke="#c084fc" stroke-width="1.5" stroke-linecap="round"/>
+</svg>
+
+<!-- FAIRY -->
+<div id="fairy-wrap" style="left:-200px;top:-200px">
+  <svg id="fairy-svg" viewBox="0 0 80 100" xmlns="http://www.w3.org/2000/svg">
+    <defs>
+      <linearGradient id="tinkIrid" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" stop-color="#fce7f3"/>
+        <stop offset="30%" stop-color="#f9a8d4"/>
+        <stop offset="65%" stop-color="#ec4899"/>
+        <stop offset="100%" stop-color="#fde68a"/>
+      </linearGradient>
+    </defs>
+    <g fill="url(#tinkIrid)">
+      <!-- wing back left — big tall pointed -->
+      <path d="M38,22 C28,8 14,2 10,8 C6,14 16,24 30,28 Z"/>
+      <!-- wing back right — medium pointed -->
+      <path d="M44,22 C52,8 62,4 64,10 C66,16 56,24 46,28 Z"/>
+      <!-- wing lower left -->
+      <path d="M36,30 C24,28 14,32 14,38 C14,44 26,44 36,38 Z"/>
+      <!-- wing lower right -->
+      <path d="M46,30 C56,28 64,34 63,40 C62,46 52,44 46,38 Z"/>
+      <!-- head -->
+      <ellipse cx="44" cy="24" rx="9" ry="10"/>
+      <!-- hair bun top -->
+      <ellipse cx="46" cy="14" rx="7" ry="8"/>
+      <ellipse cx="40" cy="16" rx="5" ry="6"/>
+      <!-- hair wisp up -->
+      <ellipse cx="50" cy="9" rx="3" ry="5" transform="rotate(-20,50,9)"/>
+      <!-- neck -->
+      <rect x="41" y="33" width="6" height="5" rx="2"/>
+      <!-- body torso — leaning forward slightly -->
+      <path d="M38,38 C34,40 32,46 33,54 C34,60 38,64 42,65 C46,64 50,60 51,54 C52,46 50,40 46,38 Z"/>
+      <!-- arm extended left with wand -->
+      <path d="M38,42 C32,42 24,44 16,46 C12,47 8,48 4,50" stroke="url(#tinkIrid)" stroke-width="3.5" stroke-linecap="round" fill="none"/>
+      <!-- wand in hand -->
+      <line x1="4" y1="50" x2="-8" y2="56" stroke="#fde68a" stroke-width="1.5" stroke-linecap="round"/>
+      <circle cx="-8" cy="56" r="2.5" fill="#fde68a"/>
+      <circle cx="-8" cy="56" r="1" fill="white"/>
+      <!-- arm right raised back -->
+      <path d="M46,42 C52,40 58,36 64,34" stroke="url(#tinkIrid)" stroke-width="3" stroke-linecap="round" fill="none"/>
+      <!-- fingers right -->
+      <circle cx="64" cy="34" r="3"/>
+      <!-- skirt flare -->
+      <path d="M34,56 C28,58 26,64 30,68 C34,72 38,70 42,70 C46,70 50,72 54,68 C58,64 56,58 50,56 Z"/>
+      <!-- leg front bent -->
+      <path d="M38,68 C36,74 35,80 36,86" stroke="url(#tinkIrid)" stroke-width="4" stroke-linecap="round" fill="none"/>
+      <!-- foot front -->
+      <ellipse cx="35" cy="87" rx="6" ry="3.5" transform="rotate(-10,35,87)"/>
+      <!-- leg back kicked up -->
+      <path d="M46,66 C50,72 54,76 56,72 C58,68 54,62 50,60" stroke="url(#tinkIrid)" stroke-width="4" stroke-linecap="round" fill="none"/>
+      <!-- foot back -->
+      <ellipse cx="57" cy="71" rx="5" ry="3" transform="rotate(20,57,71)"/>
+    </g>
+  </svg>
+</div>
+
+<script>
+// ── STATE ──────────────────────────────────────────────────────
+const SK = 'altheaConstellation';
+let quotes = JSON.parse(localStorage.getItem(SK) || '[]');
+let activeTheme = 'all';
+let searchTerm = '';
+let viewX = 0, viewY = 0, scale = 1;
+let isDragging = false, dragStart = {x:0,y:0}, viewStart = {x:0,y:0};
+let openQuoteId = null;
+
+// ── THEME CONFIG ──────────────────────────────────────────────
+const THEMES = {
+  mindset: { color:'#fbbf24', label:'mindset / growth' },
+  love:    { color:'#f472b6', label:'love / relationships' },
+  career:  { color:'#e2e8f0', label:'career / ambition' },
+  spirit:  { color:'#c084fc', label:'spirituality / universe' },
+  self:    { color:'#fb923c', label:'self / identity' },
+  life:    { color:'#a7f3d0', label:'life & humour' },
+  other:   { color:'#67e8f9', label:'other' },
+};
+
+// theme keyword detection
+const THEME_WORDS = {
+  mindset: ['grow','growth','mindset','better','improve','learn','failure','success','change','evolve','discipline','habit','potential','fear','courage','progress','resilience','strength','believe','possible'],
+  love:    ['love','heart','feel','feeling','people','someone','together','alone','miss','relationship','connection','belong','hurt','heal','trust','vulnerability','intimacy','care'],
+  career:  ['work','career','job','build','create','hustle','ambition','dream','goal','money','success','fail','start','business','opportunity','skill','talent','profession'],
+  spirit:  ['universe','god','soul','spirit','energy','divine','cosmic','faith','believe','universe','manifest','karma','peace','surrender','higher','purpose','meaning','why','exist'],
+  self:    ['i am','myself','identity','who i','who you','authentic','real','truth','own','self','value','worth','boundary','accept','deserve','enough','me','my'],
+  life:    ['life','time','day','moment','human','world','society','funny','irony','ironic','always','never','everyone','nobody','people are','why do','how is','literally','basically'],
+};
+
+function detectTheme(text) {
+  const t = text.toLowerCase();
+  let best = 'other', bestScore = 0;
+  for (const [theme, words] of Object.entries(THEME_WORDS)) {
+    const score = words.filter(w => t.includes(w)).length;
+    if (score > bestScore) { bestScore = score; best = theme; }
+  }
+  return best;
+}
+
+// ── PARTICLES ──────────────────────────────────────────────────
+(function spawnParticles() {
+  const layer = document.getElementById('particles');
+  for (let i = 0; i < 35; i++) {
+    const p = document.createElement('div');
+    p.className = 'particle';
+    const size = 1 + Math.random() * 2.5;
+    p.style.cssText = `
+      left:${Math.random()*100}%;
+      width:${size}px; height:${size}px;
+      animation-duration:${15+Math.random()*25}s;
+      animation-delay:-${Math.random()*30}s;
+      opacity:${0.3+Math.random()*0.5};
+    `;
+    layer.appendChild(p);
+  }
+})();
+
+// ── CANVAS DRAG & ZOOM ─────────────────────────────────────────
+const canvasWrap = document.getElementById('canvas-wrap');
+const canvas = document.getElementById('canvas');
+
+function applyTransform() {
+  canvas.style.transform = `translate(calc(-50% + ${viewX}px), calc(-50% + ${viewY}px)) scale(${scale})`;
+}
+applyTransform();
+
+canvasWrap.addEventListener('mousedown', e => {
+  if (e.target.closest('.star-node')) return;
+  isDragging = true;
+  dragStart = { x: e.clientX, y: e.clientY };
+  viewStart = { x: viewX, y: viewY };
+  canvasWrap.style.cursor = 'grabbing';
+});
+window.addEventListener('mousemove', e => {
+  if (!isDragging) return;
+  viewX = viewStart.x + (e.clientX - dragStart.x);
+  viewY = viewStart.y + (e.clientY - dragStart.y);
+  applyTransform();
+});
+window.addEventListener('mouseup', () => {
+  isDragging = false;
+  canvasWrap.style.cursor = '';
+});
+canvasWrap.addEventListener('wheel', e => {
+  e.preventDefault();
+  const delta = e.deltaY > 0 ? 0.9 : 1.1;
+  scale = Math.max(0.3, Math.min(3, scale * delta));
+  applyTransform();
+}, { passive: false });
+
+function zoomIn()  { scale = Math.min(3, scale * 1.2); applyTransform(); }
+function zoomOut() { scale = Math.max(0.3, scale * 0.8); applyTransform(); }
+function resetView() { viewX=0; viewY=0; scale=1; applyTransform(); }
+
+function zoomToTheme(theme) {
+  const nodes = quotes.filter(q => q.theme === theme || theme === 'all');
+  if (!nodes.length) return;
+  const cx = nodes.reduce((s,q)=>s+q.x,0)/nodes.length;
+  const cy = nodes.reduce((s,q)=>s+q.y,0)/nodes.length;
+  const w = window.innerWidth, h = window.innerHeight;
+  viewX = w/2 - cx;
+  viewY = h/2 - cy;
+  scale = 1.2;
+  applyTransform();
+}
+
+// ── QUOTE PLACEMENT ───────────────────────────────────────────
+const THEME_ZONES = {
+  mindset: {cx:1350, cy:1250, r:280},
+  love:    {cx:1700, cy:1600, r:260},
+  career:  {cx:1200, cy:1700, r:250},
+  spirit:  {cx:1650, cy:1100, r:270},
+  self:    {cx:1050, cy:1350, r:240},
+  life:    {cx:1900, cy:1350, r:260},
+  other:   {cx:1500, cy:1500, r:200},
+};
+
+function placeInZone(theme) {
+  const zone = THEME_ZONES[theme] || THEME_ZONES.other;
+  const angle = Math.random() * Math.PI * 2;
+  const dist = 60 + Math.random() * zone.r;
+  return {
+    x: zone.cx + Math.cos(angle) * dist,
+    y: zone.cy + Math.sin(angle) * dist,
+  };
+}
+
+// ── STAR SIZE ─────────────────────────────────────────────────
+function starSize(text) {
+  const len = text.length;
+  if (len < 60)  return { orb:14, font:13 };
+  if (len < 120) return { orb:18, font:13 };
+  if (len < 200) return { orb:22, font:13 };
+  return { orb:26, font:13 };
+}
+
+// ── RENDER ────────────────────────────────────────────────────
+function render() {
+  const canvasEl = document.getElementById('canvas');
+  // remove old star nodes
+  canvasEl.querySelectorAll('.star-node').forEach(n=>n.remove());
+  // clear lines
+  const svg = document.getElementById('svg-lines');
+  svg.innerHTML = '';
+
+  const visible = quotes.filter(q => {
+    const themeMatch = activeTheme === 'all' || q.theme === activeTheme;
+    const searchMatch = !searchTerm || q.text.toLowerCase().includes(searchTerm) || q.theme.toLowerCase().includes(searchTerm);
+    return themeMatch && searchMatch;
+  });
+
+  // draw constellation lines within each theme
+  const byTheme = {};
+  visible.forEach(q => { (byTheme[q.theme]||(byTheme[q.theme]=[])).push(q); });
+
+  for (const [theme, nodes] of Object.entries(byTheme)) {
+    if (nodes.length < 2) continue;
+    const col = THEMES[theme]?.color || '#c084fc';
+    // connect nearby stars
+    for (let i = 0; i < nodes.length; i++) {
+      for (let j = i+1; j < nodes.length; j++) {
+        const dx = nodes[i].x - nodes[j].x;
+        const dy = nodes[i].y - nodes[j].y;
+        const dist = Math.sqrt(dx*dx+dy*dy);
+        if (dist < 320) {
+          const line = document.createElementNS('http://www.w3.org/2000/svg','line');
+          line.setAttribute('x1',nodes[i].x); line.setAttribute('y1',nodes[i].y);
+          line.setAttribute('x2',nodes[j].x); line.setAttribute('y2',nodes[j].y);
+          const opacity = Math.max(0.05, 0.25 - dist/1600);
+          line.setAttribute('stroke', col);
+          line.setAttribute('stroke-width','1');
+          line.setAttribute('stroke-opacity', opacity);
+          line.setAttribute('stroke-dasharray','4 6');
+          svg.appendChild(line);
+        }
+      }
+    }
+  }
+
+  // draw stars
+  visible.forEach(q => {
+    const col = THEMES[q.theme]?.color || '#c084fc';
+    const sz = starSize(q.text);
+    const node = document.createElement('div');
+    node.className = 'star-node';
+    node.style.left = q.x + 'px';
+    node.style.top  = q.y + 'px';
+    node.innerHTML = `
+      <div class="star-orb" style="
+        width:${sz.orb}px; height:${sz.orb}px;
+        --glow-col: ${col}44;
+        background: radial-gradient(circle at 38% 35%, #fff 0%, ${col} 40%, ${col}88 70%, transparent 100%);
+        box-shadow: 0 0 ${sz.orb*1.5}px ${col}88, 0 0 ${sz.orb*3}px ${col}33;
+      "></div>
+      <div class="star-label" style="color:${col}cc;font-size:${sz.font}px">${q.text.slice(0,28)}${q.text.length>28?'…':''}</div>
+    `;
+    node.addEventListener('click', () => openQuote(q.id));
+    canvasEl.appendChild(node);
+  });
+
+  // empty state
+  document.getElementById('empty-state').style.display = quotes.length ? 'none' : 'block';
+  document.getElementById('quote-count').textContent = `${quotes.length} star${quotes.length===1?'':'s'} in your sky`;
+
+  drawMandala();
+}
+
+// ── MANDALA ───────────────────────────────────────────────────
+function drawMandala() {
+  const mc = document.getElementById('mandala-canvas');
+  const ctx = mc.getContext('2d');
+  const W = 160, H = 160, cx = 80, cy = 80;
+  ctx.clearRect(0,0,W,H);
+
+  if (!quotes.length) {
+    // empty mandala — faint rings
+    ctx.strokeStyle = 'rgba(192,132,252,0.15)';
+    ctx.lineWidth = 1;
+    [15,28,40,52].forEach(r => {
+      ctx.beginPath(); ctx.arc(cx,cy,r,0,Math.PI*2); ctx.stroke();
+    });
+    document.getElementById('mandala-label').textContent = 'add quotes to reveal your pattern';
+    return;
+  }
+
+  const counts = {};
+  Object.keys(THEMES).forEach(t => counts[t] = 0);
+  quotes.forEach(q => counts[q.theme] = (counts[q.theme]||0)+1);
+  const total = quotes.length;
+
+  const rings = [
+    {key:'spirit', r:52, width:10},
+    {key:'self',   r:40, width:9},
+    {key:'love',   r:30, width:9},
+    {key:'mindset',r:20, width:8},
+    {key:'career', r:12, width:6},
+    {key:'life',   r:6,  width:4},
+  ];
+
+  // outer decorative petals
+  const petalCount = 8;
+  const maxPetalSize = Math.min(22, 8 + quotes.length * 0.5);
+  for (let i=0; i<petalCount; i++) {
+    const angle = (i/petalCount)*Math.PI*2 - Math.PI/2;
+    const dominant = Object.entries(counts).sort((a,b)=>b[1]-a[1])[0];
+    const col = THEMES[dominant?.[0]]?.color || '#c084fc';
+    const px = cx + Math.cos(angle) * 58;
+    const py = cy + Math.sin(angle) * 58;
+    ctx.save();
+    ctx.translate(px,py);
+    ctx.rotate(angle + Math.PI/2);
+    const g = ctx.createRadialGradient(0,0,0,0,0,maxPetalSize);
+    g.addColorStop(0, col+'cc');
+    g.addColorStop(1, col+'00');
+    ctx.fillStyle = g;
+    ctx.beginPath();
+    ctx.ellipse(0, -maxPetalSize/2, maxPetalSize*0.35, maxPetalSize*0.6, 0, 0, Math.PI*2);
+    ctx.fill();
+    ctx.restore();
+  }
+
+  // theme rings
+  rings.forEach(({key, r, width}) => {
+    const ratio = total > 0 ? (counts[key]||0)/total : 0;
+    const col = THEMES[key]?.color || '#c084fc';
+    const alpha = 0.15 + ratio * 0.75;
+    const actualWidth = width * (0.3 + ratio * 1.2);
+
+    ctx.strokeStyle = col;
+    ctx.globalAlpha = alpha;
+    ctx.lineWidth = actualWidth;
+    ctx.shadowColor = col;
+    ctx.shadowBlur = 6 + ratio * 10;
+    ctx.beginPath();
+    ctx.arc(cx, cy, r, 0, Math.PI*2);
+    ctx.stroke();
+    ctx.shadowBlur = 0;
+    ctx.globalAlpha = 1;
+  });
+
+  // centre gem
+  const gCentre = ctx.createRadialGradient(cx-2, cy-2, 0, cx, cy, 8);
+  gCentre.addColorStop(0,'#ffffff');
+  gCentre.addColorStop(0.4,'#e9d5ff');
+  gCentre.addColorStop(1,'#7c3aed');
+  ctx.fillStyle = gCentre;
+  ctx.shadowColor = '#c084fc';
+  ctx.shadowBlur = 12;
+  ctx.beginPath(); ctx.arc(cx,cy,6,0,Math.PI*2); ctx.fill();
+  ctx.shadowBlur = 0;
+
+  // label
+  const dom = Object.entries(counts).sort((a,b)=>b[1]-a[1])[0];
+  document.getElementById('mandala-label').textContent =
+    dom ? `drawn to ${THEMES[dom[0]]?.label || dom[0]}` : 'your pattern is forming';
+}
+
+// ── ADD QUOTE ─────────────────────────────────────────────────
+function addQuote() {
+  const text = document.getElementById('quote-input').value.trim();
+  if (!text) { document.getElementById('quote-input').style.borderColor='#f472b6'; return; }
+  const theme = document.getElementById('theme-select').value;
+  const pos = placeInZone(theme);
+  const q = { id: Date.now()+'', text, theme, x:pos.x, y:pos.y, added: new Date().toISOString() };
+  quotes.push(q);
+  localStorage.setItem(SK, JSON.stringify(quotes));
+  document.getElementById('quote-input').value = '';
+  document.getElementById('suggest-wrap').style.display='none';
+  render();
+  if(window.fairyNewStar) window.fairyNewStar(pos.x, pos.y);
+  // briefly pan to new star
+  const w = window.innerWidth, h = window.innerHeight;
+  viewX = w/2 - pos.x;
+  viewY = h/2 - pos.y;
+  scale = 1.1;
+  applyTransform();
+}
+
+// ── THEME SUGGEST ─────────────────────────────────────────────
+let suggestTimeout;
+function suggestTheme() {
+  clearTimeout(suggestTimeout);
+  suggestTimeout = setTimeout(()=>{
+    const text = document.getElementById('quote-input').value.trim();
+    if (text.length < 20) { document.getElementById('suggest-wrap').style.display='none'; return; }
+    const suggested = detectTheme(text);
+    const tag = document.getElementById('suggest-tag');
+    tag.textContent = `✦ ${THEMES[suggested].label}?`;
+    tag.dataset.theme = suggested;
+    document.getElementById('suggest-wrap').style.display='block';
+  }, 400);
+}
+function acceptSuggest() {
+  const theme = document.getElementById('suggest-tag').dataset.theme;
+  document.getElementById('theme-select').value = theme;
+  document.getElementById('suggest-wrap').style.display='none';
+}
+
+// ── OPEN QUOTE ────────────────────────────────────────────────
+function openQuote(id) {
+  const q = quotes.find(x=>x.id===id);
+  if (!q) return;
+  openQuoteId = id;
+  document.getElementById('qv-theme').textContent = THEMES[q.theme]?.label || q.theme;
+  document.getElementById('qv-text').textContent = '"'+q.text+'"';
+  document.getElementById('qv-delete').onclick = () => deleteQuote(id);
+  document.getElementById('quote-view').classList.add('open');
+}
+function closeQuoteView(e) {
+  if (e && e.target !== document.getElementById('quote-view')) return;
+  document.getElementById('quote-view').classList.remove('open');
+  openQuoteId = null;
+}
+document.addEventListener('keydown', e => { if(e.key==='Escape') document.getElementById('quote-view').classList.remove('open'); });
+
+function deleteQuote(id) {
+  quotes = quotes.filter(q=>q.id!==id);
+  localStorage.setItem(SK, JSON.stringify(quotes));
+  document.getElementById('quote-view').classList.remove('open');
+  render();
+}
+
+// ── FILTER & SEARCH ───────────────────────────────────────────
+function filterTheme(el, theme) {
+  activeTheme = theme;
+  document.querySelectorAll('.theme-pill').forEach(p=>p.classList.remove('active'));
+  el.classList.add('active');
+  render();
+  if (theme !== 'all') zoomToTheme(theme);
+  else resetView();
+}
+function handleSearch() {
+  searchTerm = document.getElementById('search-input').value.toLowerCase().trim();
+  render();
+}
+
+// ── EXPORT ────────────────────────────────────────────────────
+function exportQuotes() {
+  const data = {
+    exported: new Date().toISOString(),
+    total: quotes.length,
+    quotes: quotes.map(q=>({text:q.text,theme:THEMES[q.theme]?.label||q.theme,added:q.added}))
+  };
+  const blob = new Blob([JSON.stringify(data,null,2)],{type:'application/json'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'althea-constellation-'+new Date().toISOString().slice(0,10)+'.json';
+  a.click();
+}
+
+// ── WAND CURSOR ───────────────────────────────────────────────
+(function(){
+  const wand = document.getElementById('wand-cursor');
+  const COLS = ['#c084fc','#e9d5ff','#f472b6','#a78bfa','#ffffff','#ddd6fe'];
+  const SHAPES = ['✦','✧','⋆','˚','·','★'];
+  let ready = false;
+
+  document.addEventListener('mousemove', e=>{
+    if(!ready){ ready=true; wand.style.display='block'; document.body.classList.add('no-cursor'); }
+    wand.style.left = e.clientX+'px';
+    wand.style.top  = e.clientY+'px';
+    if(Math.random()>0.5){
+      const s=document.createElement('div');
+      s.className='fairy-dust';
+      const size=2+Math.random()*6;
+      const col=COLS[Math.floor(Math.random()*COLS.length)];
+      const dx=(Math.random()-0.5)*55;
+      const dy=-(10+Math.random()*40);
+      if(Math.random()>0.5){
+        s.style.cssText=`left:${e.clientX+(Math.random()-0.5)*12}px;top:${e.clientY+(Math.random()-0.5)*12}px;width:auto;height:auto;background:transparent;font-size:${size+3}px;color:${col};text-shadow:0 0 6px ${col};--dx:${dx}px;--dy:${dy}px;line-height:1;`;
+        s.textContent=SHAPES[Math.floor(Math.random()*SHAPES.length)];
+      } else {
+        s.style.cssText=`left:${e.clientX+(Math.random()-0.5)*12}px;top:${e.clientY+(Math.random()-0.5)*12}px;width:${size}px;height:${size}px;background:radial-gradient(circle,${col},transparent);box-shadow:0 0 ${size}px ${col};--dx:${dx}px;--dy:${dy}px;`;
+      }
+      document.body.appendChild(s);
+      setTimeout(()=>s.remove(),850);
+    }
+  });
+})();
+
+
+// ── FAIRY ENGINE ─────────────────────────────────────────────────────────
+document.addEventListener('DOMContentLoaded', function() {
+(function(){
+  const fw = document.getElementById('fairy-wrap');
+
+  // Fairy state
+  let fx = window.innerWidth * 0.6;
+  let fy = window.innerHeight * 0.4;
+  let targetX = fx, targetY = fy;
+  let velX = 0, velY = 0;
+  let facingRight = true;
+  let state = 'idle';   // idle | flying | reading | dancing | chasing | sleeping
+  let stateTimer = 0;
+  let wingPhase = 0;
+  let bobPhase = 0;
+  let loopAngle = 0;
+  let loopCenX = 0, loopCenY = 0;
+  let loopCount = 0;
+  let idleTimer = 0;
+  let lastMouseX = -999, lastMouseY = -999;
+  let mouseX = -999, mouseY = -999;
+  let lastMouseMove = Date.now();
+  let dustTimer = 0;
+  let wigglePhase = 0;
+  let starTargetIdx = -1;
+  let starPositions = [];
+  let lastRenderTime = Date.now();
+
+  // wand position (screen coords)
+  document.addEventListener('mousemove', e => {
+    mouseX = e.clientX;
+    mouseY = e.clientY;
+    lastMouseMove = Date.now();
+  });
+
+  // expose: called from addQuote() to make fairy dance
+  window.fairyNewStar = function(sx, sy) {
+    // sx,sy are canvas coords — convert to screen
+    const rect = document.getElementById('canvas').getBoundingClientRect();
+    const scaleF = rect.width / 3000;
+    const screenX = rect.left + sx * scaleF;
+    const screenY = rect.top  + sy * scaleF;
+    targetX = screenX;
+    targetY = screenY;
+    state = 'flying-to-new';
+    stateTimer = 0;
+  };
+
+  function spawnDust(x, y, col) {
+    const d = document.createElement('div');
+    d.className = 'fairy-dust-trail';
+    const size = 2 + Math.random() * 4;
+    const col2 = col || (state==='chasing' ? '#fde68a' : '#f9a8d4');
+    d.style.cssText = `
+      left:${x+(Math.random()-0.5)*10}px;
+      top:${y+(Math.random()-0.5)*10}px;
+      width:${size}px;height:${size}px;
+      background:radial-gradient(circle,${col2},transparent);
+      box-shadow:0 0 ${size}px ${col2};
+      --tdx:${(Math.random()-0.5)*20}px;
+      --tdy:${-(5+Math.random()*15)}px;
+    `;
+    document.body.appendChild(d);
+    setTimeout(() => d.remove(), 1000);
+  }
+
+  function spawnZzz() {
+    const z = document.createElement('div');
+    z.className = 'fairy-zzz';
+    z.textContent = 'z z z';
+    z.style.left = (fx + 20) + 'px';
+    z.style.top  = (fy - 20) + 'px';
+    document.body.appendChild(z);
+    setTimeout(() => z.remove(), 2000);
+  }
+
+  function spawnThought() {
+    const t = document.createElement('div');
+    t.className = 'fairy-thought';
+    t.textContent = '✦';
+    t.style.left = (fx + 18) + 'px';
+    t.style.top  = (fy - 24) + 'px';
+    document.body.appendChild(t);
+    setTimeout(() => t.remove(), 2000);
+  }
+
+  function getStarScreenPositions() {
+    const nodes = document.querySelectorAll('.star-node');
+    const positions = [];
+    nodes.forEach(n => {
+      const rect = n.getBoundingClientRect();
+      positions.push({ x: rect.left + rect.width/2, y: rect.top + rect.height/2 });
+    });
+    return positions;
+  }
+
+  function pickNextStar(exclude) {
+    const positions = getStarScreenPositions();
+    if (!positions.length) return null;
+    const candidates = positions.filter((_,i) => i !== exclude);
+    if (!candidates.length) return positions[0];
+    return candidates[Math.floor(Math.random() * candidates.length)];
+  }
+
+  function distToMouse() {
+    const dx = fx - mouseX, dy = fy - mouseY;
+    return Math.sqrt(dx*dx + dy*dy);
+  }
+
+  function updateWings(dt, speed) { wingPhase += dt * (3 + speed * 6); }
+
+  // Main loop
+  function tick() {
+    const now = Date.now();
+    const dt = Math.min((now - lastRenderTime) / 1000, 0.05);
+    lastRenderTime = now;
+
+    const idleSeconds = (now - lastMouseMove) / 1000;
+    const dist = distToMouse();
+    const wandNear = mouseX > 0 && dist < 150;
+
+    stateTimer += dt;
+    bobPhase += dt * 1.8;
+    dustTimer += dt;
+
+    // ── STATE MACHINE ──────────────────────────────────────────
+    if (wandNear && state !== 'chasing' && state !== 'dancing') {
+      state = 'chasing';
+      stateTimer = 0;
+      fw.className = '';
+      fw.classList.add('chasing');
+    }
+
+    if (idleSeconds > 30 && state === 'idle' && !wandNear) {
+      state = 'sleeping';
+      stateTimer = 0;
+      fw.className = '';
+      fw.classList.add('sleeping');
+    }
+
+    if (state === 'sleeping' && (wandNear || idleSeconds < 28)) {
+      // wake up
+      state = 'idle';
+      fw.className = '';
+    }
+
+    switch (state) {
+
+      case 'chasing': {
+        // chase wand with slight overshoot
+        const tx = mouseX + (Math.random()-0.5)*20;
+        const ty = mouseY - 30;
+        const spring = 3.5;
+        velX += (tx - fx) * spring * dt;
+        velY += (ty - fy) * spring * dt;
+        velX *= 0.75; velY *= 0.75;
+        fx += velX; fy += velY;
+        if (!wandNear) { state='idle'; fw.className=''; stateTimer=0; }
+        updateWings(dt, Math.min(1, Math.abs(velX+velY)/80));
+        break;
+      }
+
+      case 'flying': {
+        const dx = targetX - fx, dy = targetY - fy;
+        const dist2 = Math.sqrt(dx*dx+dy*dy);
+        if (dist2 < 18) {
+          state = 'reading';
+          stateTimer = 0;
+          fw.className = '';
+          spawnThought();
+        } else {
+          velX += (dx/dist2) * 100 * dt;
+          velY += (dy/dist2) * 100 * dt;
+          velX *= 0.82; velY *= 0.82;
+          fx += velX; fy += velY;
+        }
+        updateWings(dt, Math.min(1, dist2/200));
+        break;
+      }
+
+      case 'reading': {
+        // gentle bob while reading
+        fy += Math.sin(bobPhase) * 0.4;
+        updateWings(dt, 0.2);
+        if (stateTimer > 3.5) {
+          // done reading — loop spin before flying away
+          spawnThought();
+          state = 'looping';
+          loopCenX = fx; loopCenY = fy;
+          loopAngle = 0; loopCount = 0;
+          stateTimer = 0;
+        }
+        break;
+      }
+
+      case 'looping': {
+        loopAngle += dt * 4.5;
+        const r = 28;
+        fx = loopCenX + Math.cos(loopAngle) * r;
+        fy = loopCenY + Math.sin(loopAngle) * r - loopCount * 4;
+        if (loopAngle > Math.PI * 2 * 2.5) {
+          // pick next star
+          const next = pickNextStar(starTargetIdx);
+          if (next) {
+            targetX = next.x; targetY = next.y;
+            state = 'flying';
+          } else {
+            state = 'idle';
+          }
+          stateTimer = 0;
+          fw.className = '';
+        }
+        updateWings(dt, 0.8);
+        break;
+      }
+
+      case 'flying-to-new': {
+        const dx = targetX - fx, dy = targetY - fy;
+        const dist2 = Math.sqrt(dx*dx+dy*dy);
+        if (dist2 < 22) {
+          state = 'dancing';
+          stateTimer = 0;
+          fw.className = '';
+          fw.classList.add('dancing');
+          wigglePhase = 0;
+        } else {
+          velX += (dx/dist2) * 120 * dt;
+          velY += (dy/dist2) * 120 * dt;
+          velX *= 0.8; velY *= 0.8;
+          fx += velX; fy += velY;
+        }
+        updateWings(dt, 0.9);
+        break;
+      }
+
+      case 'dancing': {
+        wigglePhase += dt * 8;
+        fx += Math.sin(wigglePhase) * 1.5;
+        fy += Math.cos(wigglePhase * 0.7) * 1;
+        updateWings(dt, 1);
+        if (stateTimer > 2.8) {
+          state = 'looping';
+          loopCenX = fx; loopCenY = fy;
+          loopAngle = 0; loopCount = 0;
+          stateTimer = 0;
+          fw.className = '';
+        }
+        break;
+      }
+
+      case 'sleeping': {
+        fy += Math.sin(bobPhase * 0.3) * 0.15;
+        updateWings(dt, 0.05);
+        if (stateTimer > 4 && Math.floor(stateTimer) % 3 === 0 && Math.random() < 0.02) {
+          spawnZzz();
+        }
+        break;
+      }
+
+      default: // idle
+        fy += Math.sin(bobPhase) * 0.3;
+        updateWings(dt, 0.25);
+        if (stateTimer > 4) {
+          // go visit a star
+          const next = pickNextStar(-1);
+          if (next) {
+            targetX = next.x; targetY = next.y;
+            state = 'flying';
+          }
+          stateTimer = 0;
+        }
+        break;
+    }
+
+    // ── FACE DIRECTION ──
+    const movingRight = velX > 0.5;
+    const movingLeft  = velX < -0.5;
+    if (movingRight && !facingRight) { facingRight = true;  fw.style.transform = `translate(-50%,-50%) scaleX(1)`; }
+    if (movingLeft  &&  facingRight) { facingRight = false; fw.style.transform = `translate(-50%,-50%) scaleX(-1)`; }
+
+    // ── DUST TRAIL ──
+    if (dustTimer > 0.06 && (state==='flying'||state==='chasing'||state==='looping'||state==='flying-to-new'||state==='dancing')) {
+      spawnDust(fx, fy);
+      dustTimer = 0;
+    }
+
+    // ── APPLY POSITION ──
+    fw.style.left = fx + 'px';
+    fw.style.top  = fy + 'px';
+
+    requestAnimationFrame(tick);
+  }
+
+  // start after short delay so stars exist
+  setTimeout(() => {
+    fw.style.display = 'block';
+    const start = pickNextStar(-1);
+    if (start) { fx = start.x; fy = start.y; }
+    tick();
+  }, 1200);
+
+})();
+}); // end DOMContentLoaded
+
+// ── INIT ─────────────────────────────────────────────────────
+document.addEventListener('DOMContentLoaded', ()=>{ render(); });
+</script>
+</body>
+</html>
